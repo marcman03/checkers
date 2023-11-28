@@ -22,7 +22,7 @@ public class Pascualinho implements IPlayer, IAuto {
     private GameStatus s;
 
     public Pascualinho() {
-        this.name = "Pascualinho";
+        name = "Pascualinho";
     }
 
     @Override
@@ -41,19 +41,16 @@ public class Pascualinho implements IPlayer, IAuto {
     public PlayerMove move(GameStatus s) {
 
 
-        List<MoveNode> moves =  s.getMoves();
-
-        Random rand = new Random();
-        int q = rand.nextInt(moves.size());
-        List<Point> points = new ArrayList<>();
-        MoveNode node = moves.get(q);
-        points.add(node.getPoint());
+        List<MoveNode> moves_pos =  s.getMoves();
         
-        while(!node.getChildren().isEmpty()) {
-            int c = rand.nextInt(node.getChildren().size());
-            node = node.getChildren().get(c);
-            points.add(node.getPoint());
+        List<List<Point>> moves = new ArrayList<>();
+        
+        for (int i = 0; i < moves_pos.size(); ++i) {
+            MoveNode node = moves_pos.get(i);
+            
+            moves = recorre_arbre(node, moves);
         }
+        
         return new PlayerMove( points, 0L, 0, SearchType.RANDOM);         
         
     }
@@ -66,5 +63,9 @@ public class Pascualinho implements IPlayer, IAuto {
     public String getName() {
         return name;
     }
-
+    
+    public static List<List<Point>> recorre_arbre(MoveNode node, List<List<Point>> list) {
+        
+        return list;
+    }
 }
