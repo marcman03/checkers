@@ -42,7 +42,7 @@ public class Pascualinho implements IPlayer, IAuto {
 
 
         List<MoveNode> moves_pos =  s.getMoves();
-        
+         List<Point> points = new ArrayList<>();
         List<List<Point>> moves = new ArrayList<>();
         
         for (int i = 0; i < moves_pos.size(); ++i) {
@@ -53,6 +53,18 @@ public class Pascualinho implements IPlayer, IAuto {
         
         return new PlayerMove( points, 0L, 0, SearchType.RANDOM);         
         
+    }
+    //function that returns the heuristic
+    //Now only is counting the ally and enemy pieces.
+    //Basic heuristic for testing
+    public int getHeuristic(GameStatus s){
+        return 1;
+    
+    
+    
+    
+    
+    
     }
 
     /**
