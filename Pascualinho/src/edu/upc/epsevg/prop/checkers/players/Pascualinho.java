@@ -1,11 +1,13 @@
 package edu.upc.epsevg.prop.checkers.players;
 
 
+import edu.upc.epsevg.prop.checkers.CellType;
 import edu.upc.epsevg.prop.checkers.GameStatus;
 import edu.upc.epsevg.prop.checkers.IAuto;
 import edu.upc.epsevg.prop.checkers.IPlayer;
 import edu.upc.epsevg.prop.checkers.MoveNode;
 import edu.upc.epsevg.prop.checkers.PlayerMove;
+import edu.upc.epsevg.prop.checkers.PlayerType;
 import edu.upc.epsevg.prop.checkers.SearchType;
 import java.awt.Point;
 import java.util.ArrayList;
@@ -57,8 +59,36 @@ public class Pascualinho implements IPlayer, IAuto {
     //function that returns the heuristic
     //Now only is counting the ally and enemy pieces.
     //Basic heuristic for testing
-    public int getHeuristic(GameStatus s){
-        return 1;
+    public int getHeuristic(GameStatus s,PlayerType team){
+        //thinking width and height is the same
+        int heuristic=0;
+   
+        for(int i=0; i<s.getSize();i+=1){
+            for(int j=0;j<s.getSize();j+=1){
+                CellType piece = s.getPos(i, j);
+                //Im not considering the queens
+                if (piece.equals(CellType.P1) && team.equals(PlayerType.PLAYER1)){
+                    
+                    ++heuristic;
+                }
+                else if(piece.equals(CellType.P1) && team.equals(PlayerType.PLAYER2)){
+                    --heuristic;
+                    
+                }
+                
+                 else if(piece.equals(CellType.P2) && team.equals(PlayerType.PLAYER1)){
+                    --heuristic;
+                    
+                }
+                else if(piece.equals(CellType.P2) && team.equals(PlayerType.PLAYER2)){
+                    ++heuristic;
+                }
+            
+                
+            }
+        
+        } 
+        return heuristic;
     
     
     
@@ -66,7 +96,6 @@ public class Pascualinho implements IPlayer, IAuto {
     
     
     }
-
     /**
      * Ens avisa que hem de parar la cerca en curs perquè s'ha exhaurit el temps
      * de joc.
