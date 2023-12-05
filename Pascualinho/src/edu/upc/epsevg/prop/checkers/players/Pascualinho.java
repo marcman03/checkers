@@ -55,12 +55,16 @@ public class Pascualinho implements IPlayer, IAuto {
      */
     @Override
     public PlayerMove move(GameStatus s) {
+        //s.getCurrentPlayer()
         int h = 0, index = 0;
         List<List<Point>> moves = get_list(s);
         
         for (int i = 0; i < moves.size(); ++i) {  
             //System.out.println(moves.get(i));
-            int aux = minmax(s, moves.get(i), depth, Integer.MIN_VALUE, Integer.MAX_VALUE,true);
+            GameStatus copy = new GameStatus(s);
+            copy.movePiece(moves.get(i));
+                
+            int aux = minmax(copy, depth, Integer.MIN_VALUE, Integer.MAX_VALUE,false);
             System.out.println(aux);
             if (i == 0) {
                 h = aux;
@@ -77,17 +81,18 @@ public class Pascualinho implements IPlayer, IAuto {
         return new PlayerMove(moves.get(index), 0L, 0, SearchType.MINIMAX);          
     }
     
-    public int minmax(GameStatus s, List<Point> points, int depth, int alpha, int beta, boolean max) {
+    public int minmax(GameStatus s,  int depth, int alpha, int beta, boolean max) {
         if (depth == 0) {
             return getHeuristic(s, s.getCurrentPlayer());
         }
         else {
-            GameStatus copy = new GameStatus(s);
-            copy.movePiece(points);
                 
-            List<List<Point>> moves = get_list(copy);
+            List<List<Point>> moves = get_list(s);
             for (int i = 0; i < moves.size(); ++i) {
-                int h = minmax(copy, moves.get(i), depth-1, alpha, beta, !max);
+                GameStatus copy = new GameStatus(s);
+                copy.movePiece(moves.get(i));
+                
+                int h = minmax(copy,   depth-1, alpha, beta, !max);
 
                 if (max) alpha = Math.max(alpha, h);
                 else beta = Math.min(beta, h);
@@ -99,13 +104,14 @@ public class Pascualinho implements IPlayer, IAuto {
     }
     
     public int getHeuristic(GameStatus s,PlayerType team){
+        System.out.println(""+s.toString());
         //thinking width and height is the same
         int heuristic=0;
         for(int i=0; i<s.getSize();i+=1){
             int j = 0;
             if (i % 2 == 0) j = 1;
             while (j < s.getSize()) {
-                if (s.getPos(i, j) == CellType.P2) {
+                if (s.getPos(i, j) == CellType.P2) { //TODO: canviarS
                     if (i == 4) {
                         heuristic += 1;
                     }
@@ -115,7 +121,9 @@ public class Pascualinho implements IPlayer, IAuto {
             }
             
         
-        } 
+        }
+        System.out.println("H"+heuristic);
+        System.out.println("==================================00");
         return heuristic;
     }
     
