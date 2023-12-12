@@ -86,7 +86,7 @@ public class Pascualinho implements IPlayer, IAuto {
     public int minmax(GameStatus s,/* PlayerType player,*/ int depth, int alpha, int beta, boolean max) {
         if (depth == 0 || s.checkGameOver() || !s.currentPlayerCanMove()) {
             return getHeuristic(s, player);
-            //else return getHeuristic(s, PlayerType.opposite(player));
+           
         }
         else {
                 
@@ -111,10 +111,10 @@ public class Pascualinho implements IPlayer, IAuto {
         int h = 0;
         h = count_pieces(s, team) - count_pieces(s, PlayerType.opposite(team))
             + count_triangles(s, team)- count_triangles(s, PlayerType.opposite(team)) +
-            trap(s, team);
+            trap(s, team)-trap(s, PlayerType.opposite(team));
      
         //System.out.println("H"+h);
-        //System.out.println("==================================00");
+       // System.out.println("==================================00");
         return h;
     }
     
@@ -194,7 +194,7 @@ public class Pascualinho implements IPlayer, IAuto {
         for (int y = 0; y < s.getSize(); ++y) {
             for (int x = 0; x < s.getSize(); ++x) {
                 
-                    if (player == PlayerType.PLAYER1) {
+                    if (player == PlayerType.PLAYER1 ) {
                         if (y < 5) {
                             if (s.getPos(x, y) == c) h += comprovate_trap(s, c, x, y);  
                         }    
@@ -220,7 +220,7 @@ public class Pascualinho implements IPlayer, IAuto {
             
             if (y > 0) {
                 if (x > 0) {
-                    if (s.getPos(x-1, y-1) != c) out = true;                     
+                    if (s.getPos(x-1, y-1) != c) out = true;      // si la ficha de atras no es del mismo tipo sale               
                 } 
             }
             int x2 = x+1;
@@ -230,13 +230,13 @@ public class Pascualinho implements IPlayer, IAuto {
                 while (x2 < s.getSize() & y2 < s.getSize() & !out) {
                     
                     if (x2-x == 1) {
-                        if (s.getPos(x2, y2) != CellType.EMPTY) out = true;
+                        if (s.getPos(x2, y2) != CellType.EMPTY) out = true; // una ficha alante tiene que ser espacio para seguir
                     }
                     if (x2-x == 2) {
-                        if (s.getPos(x2, y2) != CellType.P1 & s.getPos(x2, y2) != CellType.P1Q) out = true;
+                        if (s.getPos(x2, y2) != CellType.P1 & s.getPos(x2, y2) != CellType.P1Q) out = true; // 2 fichas alante que ser del mismo equipo para seguir
                     }
                     if (x2-x == 3) {
-                        if (s.getPos(x2, y2) == CellType.P2 | s.getPos(x2, y2) == CellType.P2Q) trap = true;
+                        if (s.getPos(x2, y2) == CellType.P2 | s.getPos(x2, y2) == CellType.P2Q) trap = true;//3 fichas alante tiene que ser enemiga para trampa
                         out = true;
                     }
                     
@@ -250,16 +250,17 @@ public class Pascualinho implements IPlayer, IAuto {
             
             out = false;
             trap = false;
-            x2 = x-1;
-            y2 = y+1;
-            
+        
             if (y > 0) {
                 if (x < s.getSize()-1) {
                     if (s.getPos(x+1, y-1) != c) out = true;                     
-                } 
+                }
+            x2 = x-1;
+            y2 = y+1;
+            
             }
             if (!out) {
-                while (x2 > 0 & y2 < s.getSize() & !out) {
+                while (x2 >= 0 & y2 < s.getSize() & !out) {
                     if (x-x2 == 1) {
                         if (s.getPos(x2, y2) != CellType.EMPTY) out = true;
                     }
@@ -278,7 +279,87 @@ public class Pascualinho implements IPlayer, IAuto {
                     h += 30;
                 }
             }
-        }    
+        } 
+        
+        
+        else if(c == CellType.P2) {  
+            //P2 direccion arriba derecha es decir ++x --y
+            if (y < s.getSize()-1) {
+                    if (x > 0) {
+                        if (s.getPos(x-1, y+1) != c) out = true;      // si la ficha de atras no es del mismo tipo sale               
+                    } 
+                }
+            int x2 = x+1;
+            int y2 = y-1;
+            
+            if (!out) {
+                
+                   
+                    while (x2 < s.getSize() & y2 >=0   & !out) {
+
+                        if (x2-x == 1) {
+                            if (s.getPos(x2, y2) != CellType.EMPTY)out = true;// una ficha alante tiene que ser espacio para seguir
+                        }
+                        if (x2-x == 2) {
+                            if (s.getPos(x2, y2) != CellType.P2 & s.getPos(x2, y2) != CellType.P2Q) out = true; // 2 fichas alante que ser del mismo equipo para seguir
+                        }
+                        if (x2-x == 3) {
+                            if (s.getPos(x2, y2) == CellType.P1 | s.getPos(x2, y2) == CellType.P1Q) trap = true;//3 fichas alante tiene que ser enemiga para trampa
+                            out = true;
+                        }
+
+                        ++x2;
+                        --y2;
+                    }
+                    if (trap) {
+                        h += 30;
+                    }
+                }
+            
+            out = false;
+            trap = false;
+            
+            if (y > s.getSize()-1) {
+                if (x > s.getSize()-1) {
+                    if (s.getPos(x+1, y+1) != c) out = true;      // si la ficha de atras no es del mismo tipo sale               
+                } 
+            }
+            x2 = x-1;
+            y2 = y-1;
+            
+            if (!out) {
+                   
+                    while (x2 >=0 & y2 >=0   & !out) {
+                        //System.out.println("x: "+ x +"y: "+y);
+
+                        if (x-x2 == 1) {
+                            if (s.getPos(x2, y2) != CellType.EMPTY)out = true;// una ficha alante tiene que ser espacio para seguir
+                        }
+                        if (x-x2 == 2) {
+                            if (s.getPos(x2, y2) != CellType.P2 & s.getPos(x2, y2) != CellType.P2Q) out = true; // 2 fichas alante que ser del mismo equipo para seguir
+                        }
+                        if (x-x2 == 3) {
+                            if (s.getPos(x2, y2) == CellType.P1 | s.getPos(x2, y2) == CellType.P1Q) trap = true;//3 fichas alante tiene que ser enemiga para trampa
+                            out = true;
+                        }
+
+                        --x2;
+                        --y2;
+                    }
+                    if (trap) {
+                        h += 30;
+                    }
+                }
+            
+            
+            
+            
+            
+        
+        
+        
+        
+        }
         
         return h;
     }
