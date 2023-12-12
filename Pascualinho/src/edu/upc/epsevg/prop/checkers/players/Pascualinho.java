@@ -66,7 +66,7 @@ public class Pascualinho implements IPlayer, IAuto {
             GameStatus copy = new GameStatus(s);
             copy.movePiece(moves.get(i));
                 
-            int aux = minmax(copy, player, depth-1, Integer.MIN_VALUE, Integer.MAX_VALUE,false);
+            int aux = minmax(copy, depth-1, Integer.MIN_VALUE, Integer.MAX_VALUE,false);
          //   System.out.println(aux);
             if (i == 0) {
                 h = aux;
@@ -83,10 +83,10 @@ public class Pascualinho implements IPlayer, IAuto {
         return new PlayerMove(moves.get(index), 0L, 0, SearchType.MINIMAX);          
     }
     
-    public int minmax(GameStatus s, PlayerType player, int depth, int alpha, int beta, boolean max) {
+    public int minmax(GameStatus s,/* PlayerType player,*/ int depth, int alpha, int beta, boolean max) {
         if (depth == 0 || s.checkGameOver() || !s.currentPlayerCanMove()) {
-            if (!max) return getHeuristic(s, player);
-            else return getHeuristic(s, PlayerType.opposite(player));
+            return getHeuristic(s, player);
+            //else return getHeuristic(s, PlayerType.opposite(player));
         }
         else {
                 
@@ -95,7 +95,7 @@ public class Pascualinho implements IPlayer, IAuto {
                 GameStatus copy = new GameStatus(s);
                 copy.movePiece(moves.get(i));
                 
-                int h = minmax(copy, PlayerType.opposite(player), depth-1, alpha, beta, !max);
+                int h = minmax(copy, depth-1, alpha, beta, !max);
 
                 if (max) alpha = Math.max(alpha, h);
                 else beta = Math.min(beta, h);
@@ -110,7 +110,8 @@ public class Pascualinho implements IPlayer, IAuto {
         //System.out.println(""+s.toString());
         int h = 0;
         h = count_pieces(s, team) - count_pieces(s, PlayerType.opposite(team))
-            + count_triangles(s, team)- count_triangles(s, PlayerType.opposite(team));
+            + count_triangles(s, team)- count_triangles(s, PlayerType.opposite(team)) +
+            trap(s, team);
      
         //System.out.println("H"+h);
         //System.out.println("==================================00");
@@ -192,7 +193,7 @@ public class Pascualinho implements IPlayer, IAuto {
         
         for (int y = 0; y < s.getSize(); ++y) {
             for (int x = 0; x < s.getSize(); ++x) {
-                if (x > 2 & x < 5) {
+                
                     if (player == PlayerType.PLAYER1) {
                         if (y < 5) {
                             if (s.getPos(x, y) == c) h += comprovate_trap(s, c, x, y);  
@@ -202,8 +203,7 @@ public class Pascualinho implements IPlayer, IAuto {
                         if (y > 2) {
                             if (s.getPos(x, y) == c) h += comprovate_trap(s, c, x, y);
                         }    
-                    }
-                }       
+                    }       
             }
         }
         
@@ -212,57 +212,73 @@ public class Pascualinho implements IPlayer, IAuto {
     
     public int comprovate_trap(GameStatus s, CellType c, int x, int y) {
         int h = 0;
-        boolean sortir = false;
+        boolean out = false;
+        boolean trap = false;
         
         if (c == CellType.P1) {
-            for (int i = 1; i < 4 & !sortir; ++i) {
-                if (i == 1) {
-                    if (s.getPos(x-i,y+i) != CellType.P1 & s.getPos(x-i,y+i) != CellType.P1Q) sortir = true; 
-                }
-                if (i == 2) {
+            
+            
+            if (y > 0) {
+                if (x > 0) {
+                    if (s.getPos(x-1, y-1) != c) out = true;                     
+                } 
+            }
+            int x2 = x+1;
+            int y2 = y+1;
+            if (!out) {
+               // System.out.println("x: "+ x +"y: "+y);
+                while (x2 < s.getSize() & y2 < s.getSize() & !out) {
                     
+                    if (x2-x == 1) {
+                        if (s.getPos(x2, y2) != CellType.EMPTY) out = true;
+                    }
+                    if (x2-x == 2) {
+                        if (s.getPos(x2, y2) != CellType.P1 & s.getPos(x2, y2) != CellType.P1Q) out = true;
+                    }
+                    if (x2-x == 3) {
+                        if (s.getPos(x2, y2) == CellType.P2 | s.getPos(x2, y2) == CellType.P2Q) trap = true;
+                        out = true;
+                    }
+                    
+                    ++x2;
+                    ++y2;
                 }
-                if (i == 3) {
-                    if (s.getPos(x-i,y+i) != CellType.P2 & s.getPos(x-i,y+i) != CellType.P2Q) sortir = true;
-                }
-            }
-            if (sortir) h += 
-            for (int i = 1; i < 4 & !sortir; ++i) {
-                if (i == 1) {
-                    if (s.getPos(x+i,y+i) != CellType.P1 & s.getPos(x-i,y+i) != CellType.P1Q) sortir = true; 
-                }
-                if (i == 2) {
-                    if (s.getPos(x+i,y+i) != CellType.EMPTY) sortir = true;
-                }
-                if (i == 3) {
-                    if (s.getPos(x+i,y+i) != CellType.P2 & s.getPos(x-i,y+i) != CellType.P2Q) sortir = true;
-                }
-            }
-        }
-        else if (c == CellType.P2) {
-            for (int i = 1; i < 4 & !sortir; ++i) {
-                if (i == 1) {
-                    if (s.getPos(x-i,y-i) != CellType.P2 & s.getPos(x-i,y-i) != CellType.P2Q) sortir = true; 
-                }
-                if (i == 2) {
-                    if (s.getPos(x-i,y-i) != CellType.EMPTY) sortir = true;
-                }
-                if (i == 3) {
-                    if (s.getPos(x-i,y-i) != CellType.P1 & s.getPos(x-i,y-i) != CellType.P1Q) sortir = true;
+                if (trap) {
+                    h += 30;
                 }
             }
-            for (int i = 1; i < 4 & !sortir; ++i) {
-                if (i == 1) {
-                    if (s.getPos(x+i,y-i) != CellType.P2 & s.getPos(x-i,y-i) != CellType.P2Q) sortir = true; 
+            
+            out = false;
+            trap = false;
+            x2 = x-1;
+            y2 = y+1;
+            
+            if (y > 0) {
+                if (x < s.getSize()-1) {
+                    if (s.getPos(x+1, y-1) != c) out = true;                     
+                } 
+            }
+            if (!out) {
+                while (x2 > 0 & y2 < s.getSize() & !out) {
+                    if (x-x2 == 1) {
+                        if (s.getPos(x2, y2) != CellType.EMPTY) out = true;
+                    }
+                    if (x-x2 == 2) {
+                        if (s.getPos(x2, y2) != CellType.P1 & s.getPos(x2, y2) != CellType.P1Q) out = true;
+                    }
+                    if (x-x2 == 3) {
+                        if (s.getPos(x2, y2) == CellType.P2 | s.getPos(x2, y2) == CellType.P2Q) trap = true;
+                        out = true;
+                    }
+                    
+                    --x2;
+                    ++y2;
                 }
-                if (i == 2) {
-                    if (s.getPos(x+i,y-i) != CellType.EMPTY) sortir = true;
-                }
-                if (i == 3) {
-                    if (s.getPos(x+i,y-i) != CellType.P1 & s.getPos(x-i,y-i) != CellType.P1Q) sortir = true;
+                if (trap) {
+                    h += 30;
                 }
             }
-        }
+        }    
         
         return h;
     }
