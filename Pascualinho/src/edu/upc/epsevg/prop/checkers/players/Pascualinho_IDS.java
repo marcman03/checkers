@@ -21,13 +21,13 @@ import java.util.Random;
 public class Pascualinho_IDS implements IPlayer, IAuto {
 
     private String name;
-    private GameStatus s;
+
     
     private boolean stop;
     private PlayerType player;
 
-    public Pascualinho_IDS(int depth) {
-        name = "Pascualinho";
+    public Pascualinho_IDS() {
+        name = "PascualinhoIDS";
         stop = false;
     }
     
@@ -42,6 +42,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
      */
     @Override
     public void timeout() {
+        //System.out.println("SE ACABO el tiempo");
         stop = true;
     }
 
@@ -53,22 +54,27 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
      * @return el moviment que fa el jugador.
      */
     @Override
-    public PlayerMove move(GameStatus s) {
-        player = s.getCurrentPlayer();
+    public PlayerMove move(GameStatus sg) {
+        player = sg.getCurrentPlayer();
         
         int depth = 1;
         
         int h = 0, index = 0;
+        ElMeuStatus s=new ElMeuStatus(sg);
+     
         List<List<Point>> moves = get_list(s);
-        
+       
+   
         while (!stop) {
             for (int i = 0; i < moves.size(); ++i) {  
                 //System.out.println(moves.get(i));
-                GameStatus copy = new GameStatus(s);
+                ElMeuStatus copy = new ElMeuStatus(s);
                 copy.movePiece(moves.get(i));
+   
 
                 int aux = minmax(copy, player, depth-1, Integer.MIN_VALUE, Integer.MAX_VALUE,false);
                 //System.out.println(aux);
+                if (stop)break;
                 if (i == 0) {
                     h = aux;
                     index = i;
@@ -82,6 +88,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
             }
             ++depth;
         }
+        stop=false;
         
       
         
@@ -89,7 +96,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
         return new PlayerMove(moves.get(index), 0L, 0, SearchType.MINIMAX);          
     }
     
-    public int minmax(GameStatus s, PlayerType player, int depth, int alpha, int beta, boolean max) {
+    public int minmax(ElMeuStatus s, PlayerType player, int depth, int alpha, int beta, boolean max) {
         if (depth == 0 || s.checkGameOver() || !s.currentPlayerCanMove()) {
             if (!max) return getHeuristic(s, player);
             else return getHeuristic(s, PlayerType.opposite(player));
@@ -98,8 +105,10 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                 
             List<List<Point>> moves = get_list(s);
             for (int i = 0; i < moves.size(); ++i) {
-                GameStatus copy = new GameStatus(s);
+                if (stop)break;
+                ElMeuStatus copy = new ElMeuStatus(s);
                 copy.movePiece(moves.get(i));
+               
                 
                 int h = minmax(copy, PlayerType.opposite(player), depth-1, alpha, beta, !max);
 
@@ -112,18 +121,19 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
         }
     }
     
-    public int getHeuristic(GameStatus s,PlayerType team){
+   public int getHeuristic(ElMeuStatus s,PlayerType team){
         //System.out.println(""+s.toString());
         int h = 0;
         h = count_pieces(s, team) - count_pieces(s, PlayerType.opposite(team))
-            + count_triangles(s, team)- count_triangles(s, PlayerType.opposite(team)); //trap(s, team);
-     
+            + count_triangles(s, team)- count_triangles(s, PlayerType.opposite(team));//+
+            //trap(s, team) -trap(s, PlayerType.opposite(team));
+       //System.out.println("hash: "+s.getHash(team));
         //System.out.println("H"+h);
-        //System.out.println("==================================00");
+       // System.out.println("==================================00");
         return h;
     }
     
-    public int count_pieces (GameStatus s, PlayerType team) {
+    public int count_pieces (ElMeuStatus s, PlayerType team) {
         int h=0;
         for (int y = 0; y < s.getSize(); ++y) {
             for (int x = 0; x < s.getSize(); ++x) { //TODO: recorrer bien madafaka + comprobaer si va bien
@@ -140,7 +150,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
         return h;
     }
     
-    public int count_triangles (GameStatus s, PlayerType team) {
+    public int count_triangles (ElMeuStatus s, PlayerType team) {
         int h=0;
         for (int y = 0; y < s.getSize(); ++y) {
             for (int x = 0; x < s.getSize(); ++x) { //TODO: recorrer bien madafaka + comprobaer si va bien
@@ -163,7 +173,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
         return h;
     }
     
-    public int comprovate_triangle (GameStatus s, CellType c, int x, int y) {
+    public int comprovate_triangle (ElMeuStatus s, CellType c, int x, int y) {
         int r = 0;
         
         if (c == CellType.P1) {
@@ -190,7 +200,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
         return r;
     }
     
-    public int trap (GameStatus s, PlayerType player) {
+    public int trap (ElMeuStatus s, PlayerType player) {
         int h = 0;
         
         CellType c = CellType.P1;
@@ -199,7 +209,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
         for (int y = 0; y < s.getSize(); ++y) {
             for (int x = 0; x < s.getSize(); ++x) {
                 
-                    if (player == PlayerType.PLAYER1) {
+                    if (player == PlayerType.PLAYER1 ) {
                         if (y < 5) {
                             if (s.getPos(x, y) == c) h += comprovate_trap(s, c, x, y);  
                         }    
@@ -215,30 +225,33 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
         return h;
     }
     
-    public int comprovate_trap(GameStatus s, CellType c, int x, int y) {
+    public int comprovate_trap(ElMeuStatus s, CellType c, int x, int y) {
         int h = 0;
-        boolean out = true;
+        boolean out = false;
         boolean trap = false;
         
         if (c == CellType.P1) {
-            int x2 = x+1;
-            int y2 = y+1;
+            
             
             if (y > 0) {
                 if (x > 0) {
-                    if (s.getPos(x-1, y-1) != c) out = true;                     
+                    if (s.getPos(x-1, y-1) != c) out = true;      // si la ficha de atras no es del mismo tipo sale               
                 } 
             }
+            int x2 = x+1;
+            int y2 = y+1;
             if (!out) {
+               // System.out.println("x: "+ x +"y: "+y);
                 while (x2 < s.getSize() & y2 < s.getSize() & !out) {
+                    
                     if (x2-x == 1) {
-                        if (s.getPos(x2, y2) != CellType.EMPTY) out = true;
+                        if (s.getPos(x2, y2) != CellType.EMPTY) out = true; // una ficha alante tiene que ser espacio para seguir
                     }
                     if (x2-x == 2) {
-                        if (s.getPos(x2, y2) != CellType.P1 & s.getPos(x2, y2) != CellType.P1Q) out = true;
+                        if (s.getPos(x2, y2) != CellType.P1 & s.getPos(x2, y2) != CellType.P1Q) out = true; // 2 fichas alante que ser del mismo equipo para seguir
                     }
                     if (x2-x == 3) {
-                        if (s.getPos(x2, y2) == CellType.P2 | s.getPos(x2, y2) == CellType.P2Q) trap = true;
+                        if (s.getPos(x2, y2) == CellType.P2 | s.getPos(x2, y2) == CellType.P2Q) trap = true;//3 fichas alante tiene que ser enemiga para trampa
                         out = true;
                     }
                     
@@ -246,22 +259,23 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                     ++y2;
                 }
                 if (trap) {
-                    h += 100;
+                    h += 30;
                 }
             }
             
             out = false;
             trap = false;
+        
+            if (y > 0) {
+                if (x < s.getSize()-1) {
+                    if (s.getPos(x+1, y-1) != c) out = true;                     
+                }
             x2 = x-1;
             y2 = y+1;
             
-            if (y > 0) {
-                if (x < s.getSize()) {
-                    if (s.getPos(x+1, y-1) != c) out = true;                     
-                } 
             }
             if (!out) {
-                while (x2 > 0 & y2 < s.getSize() & !out) {
+                while (x2 >= 0 & y2 < s.getSize() & !out) {
                     if (x-x2 == 1) {
                         if (s.getPos(x2, y2) != CellType.EMPTY) out = true;
                     }
@@ -277,15 +291,95 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                     ++y2;
                 }
                 if (trap) {
-                    h += 100;
+                    h += 30;
                 }
             }
-        }    
+        } 
+        
+        
+        else if(c == CellType.P2) {  
+            //P2 direccion arriba derecha es decir ++x --y
+            if (y < s.getSize()-1) {
+                    if (x > 0) {
+                        if (s.getPos(x-1, y+1) != c) out = true;      // si la ficha de atras no es del mismo tipo sale               
+                    } 
+                }
+            int x2 = x+1;
+            int y2 = y-1;
+            
+            if (!out) {
+                
+                   
+                    while (x2 < s.getSize() & y2 >=0   & !out) {
+
+                        if (x2-x == 1) {
+                            if (s.getPos(x2, y2) != CellType.EMPTY)out = true;// una ficha alante tiene que ser espacio para seguir
+                        }
+                        if (x2-x == 2) {
+                            if (s.getPos(x2, y2) != CellType.P2 & s.getPos(x2, y2) != CellType.P2Q) out = true; // 2 fichas alante que ser del mismo equipo para seguir
+                        }
+                        if (x2-x == 3) {
+                            if (s.getPos(x2, y2) == CellType.P1 | s.getPos(x2, y2) == CellType.P1Q) trap = true;//3 fichas alante tiene que ser enemiga para trampa
+                            out = true;
+                        }
+
+                        ++x2;
+                        --y2;
+                    }
+                    if (trap) {
+                        h += 30;
+                    }
+                }
+            
+            out = false;
+            trap = false;
+            
+            if (y > s.getSize()-1) {
+                if (x > s.getSize()-1) {
+                    if (s.getPos(x+1, y+1) != c) out = true;      // si la ficha de atras no es del mismo tipo sale               
+                } 
+            }
+            x2 = x-1;
+            y2 = y-1;
+            
+            if (!out) {
+                   
+                    while (x2 >=0 & y2 >=0   & !out) {
+                        //System.out.println("x: "+ x +"y: "+y);
+
+                        if (x-x2 == 1) {
+                            if (s.getPos(x2, y2) != CellType.EMPTY)out = true;// una ficha alante tiene que ser espacio para seguir
+                        }
+                        if (x-x2 == 2) {
+                            if (s.getPos(x2, y2) != CellType.P2 & s.getPos(x2, y2) != CellType.P2Q) out = true; // 2 fichas alante que ser del mismo equipo para seguir
+                        }
+                        if (x-x2 == 3) {
+                            if (s.getPos(x2, y2) == CellType.P1 | s.getPos(x2, y2) == CellType.P1Q) trap = true;//3 fichas alante tiene que ser enemiga para trampa
+                            out = true;
+                        }
+
+                        --x2;
+                        --y2;
+                    }
+                    if (trap) {
+                        h += 30;
+                    }
+                }
+            
+            
+            
+            
+            
+        
+        
+        
+        
+        }
         
         return h;
     }
     
-    public static List<List<Point>> get_list(GameStatus s) {
+    public static List<List<Point>> get_list(ElMeuStatus s) {
         List<List<Point>> moves = new ArrayList<>();
         List<MoveNode> moves_pos =  s.getMoves();
         for (int i = 0; i < moves_pos.size(); ++i) {
