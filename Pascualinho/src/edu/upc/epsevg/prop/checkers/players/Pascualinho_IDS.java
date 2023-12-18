@@ -13,6 +13,7 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -24,7 +25,8 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
     private String name;
     private boolean stop;
     private PlayerType player;
-    private HashMap<Long, ElMeuStatus> hashTable;
+    private HashMap<Long, Map<ElMeuStatus, List<Point>>> hashTable;
+    int nodes=0;
     public Pascualinho_IDS() {
         name = "PascualinhoIDS";
         stop = false;
@@ -58,11 +60,10 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
     public PlayerMove move(GameStatus sg) {
         player = sg.getCurrentPlayer();
         
-        int depth = 1; //pensar  si poner 0 y no restar 1
+        int depth = 0; //pensar  si poner 0 y no restar 1
         
         int h = 0, index = 0;
         ElMeuStatus s=new ElMeuStatus(sg);
-        hashTable.put(s.getHash(), s);
         List<List<Point>> moves = get_list(s);
         
         //PRUEBAS .-----------------------------
@@ -72,10 +73,16 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
             for (int i = 0; i < moves.size(); ++i) {  
                 //System.out.println(moves.get(i));
                 ElMeuStatus copy = new ElMeuStatus(s);
+                Map<ElMeuStatus, List<Point>> resultMap = hashTable.get(copy.getHash());
                 copy.movePiece(moves.get(i));
-                hashTable.put(copy.getHash(), copy);
+                if (resultMap!=null){
+                    moves.add(0, resultMap.get(copy));
+                    moves.remove(resultMap.get(copy));
+                  
+                }
+                
    
-                int aux = minmax(copy, player, depth-1, Integer.MIN_VALUE, Integer.MAX_VALUE,false);
+                int aux = minmax(copy, player, depth, Integer.MIN_VALUE, Integer.MAX_VALUE,false);
                 
                 if (stop)break;
                 if (i == 0) {
@@ -88,8 +95,10 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                         index = i;
                     }
                 }
+            hashTable.put(copy.getHash(), Map.of(copy,moves.get(index)));
+            
             }
-            System.out.println("depth: " + depth);
+            
             ++depth;
             /*
             System.out.println("Contenido de la tabla hash:");
@@ -100,10 +109,9 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
             System.out.println("hash: " + key);
             System.out.println("-------------------------");
             }
-*/
-           
+           */
         }
-
+        System.out.println("nodes: " + nodes);
         stop=false;
         
       
@@ -113,27 +121,43 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
     }
     
     public int minmax(ElMeuStatus s, PlayerType player, int depth, int alpha, int beta, boolean max) {
+        ++nodes;
         if (depth == 0 || s.checkGameOver() || !s.currentPlayerCanMove()) {
             if (!max) return getHeuristic(s, player);
             else return getHeuristic(s, PlayerType.opposite(player));
         }
         else {
-                
+            Map<ElMeuStatus, List<Point>> resultMap = hashTable.get(s.getHash());
             List<List<Point>> moves = get_list(s);
-            for (int i = 0; i < moves.size(); ++i) {
+            if (resultMap!=null){
+                moves.add(0, resultMap.get(s));
+                moves.remove(resultMap.get(s));
+            }
+            int index=0;
+            int hmax=0;
+            for ( int i = 0; i < moves.size(); ++i) {
                 if (stop)break;
                 ElMeuStatus copy = new ElMeuStatus(s);
                 copy.movePiece(moves.get(i));
-                hashTable.put(copy.getHash(), copy);
+                
                
                 
                 int h = minmax(copy, PlayerType.opposite(player), depth-1, alpha, beta, !max);
-
+                if (i==0)hmax=h;
+                else{
+                    if (h>hmax){
+                        hmax=h;
+                        index=i;
+                    }
+                
+                }
                 if (max) alpha = Math.max(alpha, h);
                 else beta = Math.min(beta, h);
 
                 if (alpha >= beta) break; // Alpha-Beta Pruning
             }
+        hashTable.put(s.getHash(), Map.of(s,moves.get(index)));
+   
         return max ? alpha : beta;
         }
     }
