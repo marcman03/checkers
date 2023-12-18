@@ -11,6 +11,7 @@ import edu.upc.epsevg.prop.checkers.PlayerType;
 import edu.upc.epsevg.prop.checkers.SearchType;
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -21,14 +22,13 @@ import java.util.Random;
 public class Pascualinho_IDS implements IPlayer, IAuto {
 
     private String name;
-
-    
     private boolean stop;
     private PlayerType player;
-
+    private HashMap<Long, ElMeuStatus> hashTable;
     public Pascualinho_IDS() {
         name = "PascualinhoIDS";
         stop = false;
+        hashTable=new HashMap<>();
     }
     
     @Override
@@ -43,6 +43,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
     @Override
     public void timeout() {
         //System.out.println("SE ACABO el tiempo");
+     
         stop = true;
     }
 
@@ -57,23 +58,25 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
     public PlayerMove move(GameStatus sg) {
         player = sg.getCurrentPlayer();
         
-        int depth = 1;
+        int depth = 1; //pensar  si poner 0 y no restar 1
         
         int h = 0, index = 0;
         ElMeuStatus s=new ElMeuStatus(sg);
-     
+        hashTable.put(s.getHash(), s);
         List<List<Point>> moves = get_list(s);
-       
-   
+        
+        //PRUEBAS .-----------------------------
+ 
+   //---------------------------------
         while (!stop) {
             for (int i = 0; i < moves.size(); ++i) {  
                 //System.out.println(moves.get(i));
                 ElMeuStatus copy = new ElMeuStatus(s);
                 copy.movePiece(moves.get(i));
+                hashTable.put(copy.getHash(), copy);
    
-
                 int aux = minmax(copy, player, depth-1, Integer.MIN_VALUE, Integer.MAX_VALUE,false);
-                //System.out.println(aux);
+                
                 if (stop)break;
                 if (i == 0) {
                     h = aux;
@@ -86,8 +89,21 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                     }
                 }
             }
+            System.out.println("depth: " + depth);
             ++depth;
+            /*
+            System.out.println("Contenido de la tabla hash:");
+        for (HashMap.Entry<Long, ElMeuStatus> entry : hashTable.entrySet()) {
+            Long key = entry.getKey();
+            ElMeuStatus value = entry.getValue();
+            System.out.println(value.toString());
+            System.out.println("hash: " + key);
+            System.out.println("-------------------------");
+            }
+*/
+           
         }
+
         stop=false;
         
       
@@ -108,6 +124,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                 if (stop)break;
                 ElMeuStatus copy = new ElMeuStatus(s);
                 copy.movePiece(moves.get(i));
+                hashTable.put(copy.getHash(), copy);
                
                 
                 int h = minmax(copy, PlayerType.opposite(player), depth-1, alpha, beta, !max);
@@ -125,8 +142,8 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
         //System.out.println(""+s.toString());
         int h = 0;
         h = count_pieces(s, team) - count_pieces(s, PlayerType.opposite(team))
-            + count_triangles(s, team)- count_triangles(s, PlayerType.opposite(team));//+
-            //trap(s, team) -trap(s, PlayerType.opposite(team));
+            + count_triangles(s, team)- count_triangles(s, PlayerType.opposite(team))+
+             trap(s, team) -trap(s, PlayerType.opposite(team));
        //System.out.println("hash: "+s.getHash(team));
         //System.out.println("H"+h);
        // System.out.println("==================================00");
@@ -259,7 +276,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                     ++y2;
                 }
                 if (trap) {
-                    h += 30;
+                    h += 10;
                 }
             }
             
@@ -291,7 +308,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                     ++y2;
                 }
                 if (trap) {
-                    h += 30;
+                    h += 10;
                 }
             }
         } 
@@ -327,7 +344,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                         --y2;
                     }
                     if (trap) {
-                        h += 30;
+                        h += 10;
                     }
                 }
             
@@ -362,7 +379,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                         --y2;
                     }
                     if (trap) {
-                        h += 30;
+                        h += 10;
                     }
                 }
             
@@ -380,6 +397,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
     }
     
     public static List<List<Point>> get_list(ElMeuStatus s) {
+        
         List<List<Point>> moves = new ArrayList<>();
         List<MoveNode> moves_pos =  s.getMoves();
         for (int i = 0; i < moves_pos.size(); ++i) {
