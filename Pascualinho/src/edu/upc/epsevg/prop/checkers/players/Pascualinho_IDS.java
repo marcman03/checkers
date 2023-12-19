@@ -25,7 +25,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
     private String name;
     private boolean stop;
     private PlayerType player;
-    private HashMap<Long, List<Point>> hashTable;
+    private HashMap<Long, Value> hashTable;
     int nodes=0;
     public Pascualinho_IDS() {
         name = "PascualinhoIDS";
@@ -73,14 +73,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
             for (int i = 0; i < moves.size(); ++i) {  
                 //System.out.println(moves.get(i));
                 ElMeuStatus copy = new ElMeuStatus(s);
-                List<Point> resultList = hashTable.get(copy.getHash());
                 copy.movePiece(moves.get(i));
-                if (resultList != null){
-                    moves.remove(resultList);
-                    moves.add(0, resultList);
-                }
-                
-   
                 int aux = minmax(copy, player, depth, Integer.MIN_VALUE, Integer.MAX_VALUE,false);
                 
                 if (stop)break;
@@ -94,7 +87,15 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                         index = i;
                     }
                 }
-                hashTable.put(s.getHash(),moves.get(index));
+                Value resultValue= hashTable.get(s.getHash());
+                Value v= new Value(moves.get(index), depth);
+                if(resultValue!=null){
+                    if (depth> resultValue.getDepth())hashTable.put(s.getHash(),v);
+                
+                }
+                else{
+                    hashTable.put(s.getHash(),v);
+                }
             }
             
             ++depth;
@@ -124,12 +125,12 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
             else return getHeuristic(s, PlayerType.opposite(player));
         }
         else {
-            List<Point> resultList = hashTable.get(s.getHash());
+            Value resultValue = hashTable.get(s.getHash());
             List<List<Point>> moves = get_list(s);
             
-            if (resultList != null){
-                moves.remove(resultList);
-                moves.add(0, resultList);
+            if (resultValue != null){
+             
+                moves.add(0, resultValue.getMove());
             }
             
             int index = 0;
@@ -167,7 +168,15 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
 
                 if (alpha >= beta) break; // Alpha-Beta Pruning
             }
-            hashTable.put(s.getHash(),moves.get(index));
+            
+            Value v= new Value(moves.get(index), depth);
+            if(resultValue!=null){
+                if (depth> resultValue.getDepth())hashTable.put(s.getHash(),v);
+
+            }
+            else{
+                hashTable.put(s.getHash(),v);
+            }
             return max ? alpha : beta;
         }
     }
