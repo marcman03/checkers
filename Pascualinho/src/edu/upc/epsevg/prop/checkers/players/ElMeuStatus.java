@@ -16,7 +16,7 @@ import java.util.Random;
  */
 public class ElMeuStatus extends GameStatus {
     private static final long[][][] zobristTable = new long[GameStatus.N][GameStatus.N][4];
-    private static final long[][] zobristTableDiferenciador = new long[GameStatus.N][GameStatus.N];
+    private static final long zobristTableDiferenciador;
     private long hash;
     static {
         // Inicializar la tabla Zobrist con valores aleatorios
@@ -27,9 +27,10 @@ public class ElMeuStatus extends GameStatus {
                 for (int k = 0; k < 4; ++k) {
                     zobristTable[i][j][k] = random.nextLong();
                 }
-             zobristTableDiferenciador[i][j] = random.nextLong();
             }
         }
+        zobristTableDiferenciador = random.nextLong();
+
     }
     public ElMeuStatus(int [][] tauler){
         super(tauler);
@@ -38,8 +39,7 @@ public class ElMeuStatus extends GameStatus {
     
      public ElMeuStatus(GameStatus gs){
         super(gs);
-        PlayerType player=gs.getCurrentPlayer();
-        hash= CalculateHash(player);
+        hash= CalculateHash();
         
     }
      
@@ -70,13 +70,10 @@ public class ElMeuStatus extends GameStatus {
             }
             if (nextPoint!=null){
                 hash ^=zobristTable[x][y][getPieceIndex(getPos(firstPoint.x, firstPoint.y))];// No estoy seguro si hay un problema si se convierte en reina justo
-                if (player == PlayerType.PLAYER1) hash ^= zobristTableDiferenciador[x][y];
                 hash ^=zobristTable[nextX][nextY][getPieceIndex(getPos(firstPoint.x, firstPoint.y))];
-                if (player == PlayerType.PLAYER1) hash ^= zobristTableDiferenciador[nextX][nextY];
                 //si existe una captura
                 if (capture!= null){
                     hash ^=zobristTable[capture.x][capture.y][getPieceIndex(getPos(capture.x, capture.y))];
-                    if (player == PlayerType.PLAYER1) hash ^= zobristTableDiferenciador[capture.x][capture.y];
                 }       
             }
         }
@@ -108,7 +105,7 @@ public class ElMeuStatus extends GameStatus {
     }
     
     
-    private long CalculateHash(PlayerType player) {
+    private long CalculateHash() {
         long h = 0;
         for (int y = 0; y < getSize(); ++y) {
             for (int x = 0; x < getSize(); ++x) {
@@ -117,7 +114,6 @@ public class ElMeuStatus extends GameStatus {
                 if (type != CellType.EMPTY) {
                     
                     h ^= zobristTable[x][y][getPieceIndex(type)];
-                    if (player == PlayerType.PLAYER1) h ^= zobristTableDiferenciador[x][y];
                 }
             }
         }
@@ -127,7 +123,8 @@ public class ElMeuStatus extends GameStatus {
     
     
     public long getHash(){
-      return hash;
+        if (this.getCurrentPlayer() == PlayerType.PLAYER1) return hash^ zobristTableDiferenciador;
+        return hash;
     
     }
 
