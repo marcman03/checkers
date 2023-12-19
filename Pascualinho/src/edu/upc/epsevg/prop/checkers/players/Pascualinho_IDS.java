@@ -25,7 +25,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
     private String name;
     private boolean stop;
     private PlayerType player;
-    private HashMap<Long, Map<ElMeuStatus, List<Point>>> hashTable;
+    private HashMap<Long, List<Point>> hashTable;
     int nodes=0;
     public Pascualinho_IDS() {
         name = "PascualinhoIDS";
@@ -73,12 +73,11 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
             for (int i = 0; i < moves.size(); ++i) {  
                 //System.out.println(moves.get(i));
                 ElMeuStatus copy = new ElMeuStatus(s);
-                Map<ElMeuStatus, List<Point>> resultMap = hashTable.get(copy.getHash());
+                List<Point> resultList = hashTable.get(copy.getHash());
                 copy.movePiece(moves.get(i));
-                if (resultMap!=null){
-                    moves.add(0, resultMap.get(copy));
-                    moves.remove(resultMap.get(copy));
-                  
+                if (resultList != null){
+                    moves.remove(resultList);
+                    moves.add(0, resultList);
                 }
                 
    
@@ -95,8 +94,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                         index = i;
                     }
                 }
-            hashTable.put(copy.getHash(), Map.of(copy,moves.get(index)));
-            
+                hashTable.put(s.getHash(),moves.get(index));
             }
             
             ++depth;
@@ -111,12 +109,11 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
             }
            */
         }
+        
         System.out.println("nodes: " + nodes);
+        System.out.println("depth: " + depth);
         stop=false;
-        
-      
-        
-        
+
         return new PlayerMove(moves.get(index), 0L, 0, SearchType.MINIMAX);          
     }
     
@@ -127,14 +124,17 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
             else return getHeuristic(s, PlayerType.opposite(player));
         }
         else {
-            Map<ElMeuStatus, List<Point>> resultMap = hashTable.get(s.getHash());
+            List<Point> resultList = hashTable.get(s.getHash());
             List<List<Point>> moves = get_list(s);
-            if (resultMap!=null){
-                moves.add(0, resultMap.get(s));
-                moves.remove(resultMap.get(s));
+            
+            if (resultList != null){
+                moves.remove(resultList);
+                moves.add(0, resultList);
             }
-            int index=0;
-            int hmax=0;
+            
+            int index = 0;
+            int hmax = 0;
+            int hmin = 0;
             for ( int i = 0; i < moves.size(); ++i) {
                 if (stop)break;
                 ElMeuStatus copy = new ElMeuStatus(s);
@@ -143,11 +143,22 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                
                 
                 int h = minmax(copy, PlayerType.opposite(player), depth-1, alpha, beta, !max);
-                if (i==0)hmax=h;
+                if (i == 0) {
+                    hmax = h;
+                    hmin = h;
+                } 
                 else{
-                    if (h>hmax){
-                        hmax=h;
-                        index=i;
+                    if (max) {
+                        if (h > hmax){
+                            hmax = h;
+                            index = i;
+                        }
+                    }
+                    else {
+                        if (h < hmin){
+                            hmin = h;
+                            index = i;
+                        }
                     }
                 
                 }
@@ -156,9 +167,8 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
 
                 if (alpha >= beta) break; // Alpha-Beta Pruning
             }
-        hashTable.put(s.getHash(), Map.of(s,moves.get(index)));
-   
-        return max ? alpha : beta;
+            hashTable.put(s.getHash(),moves.get(index));
+            return max ? alpha : beta;
         }
     }
     
@@ -385,36 +395,27 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
             
             if (!out) {
                    
-                    while (x2 >=0 & y2 >=0   & !out) {
-                        //System.out.println("x: "+ x +"y: "+y);
+                while (x2 >=0 & y2 >=0   & !out) {
+                    //System.out.println("x: "+ x +"y: "+y);
 
-                        if (x-x2 == 1) {
-                            if (s.getPos(x2, y2) != CellType.EMPTY)out = true;// una ficha alante tiene que ser espacio para seguir
-                        }
-                        if (x-x2 == 2) {
-                            if (s.getPos(x2, y2) != CellType.P2 & s.getPos(x2, y2) != CellType.P2Q) out = true; // 2 fichas alante que ser del mismo equipo para seguir
-                        }
-                        if (x-x2 == 3) {
-                            if (s.getPos(x2, y2) == CellType.P1 | s.getPos(x2, y2) == CellType.P1Q) trap = true;//3 fichas alante tiene que ser enemiga para trampa
-                            out = true;
-                        }
+                    if (x-x2 == 1) {
+                        if (s.getPos(x2, y2) != CellType.EMPTY)out = true;// una ficha alante tiene que ser espacio para seguir
+                    }
+                    if (x-x2 == 2) {
+                        if (s.getPos(x2, y2) != CellType.P2 & s.getPos(x2, y2) != CellType.P2Q) out = true; // 2 fichas alante que ser del mismo equipo para seguir
+                    }
+                    if (x-x2 == 3) {
+                        if (s.getPos(x2, y2) == CellType.P1 | s.getPos(x2, y2) == CellType.P1Q) trap = true;//3 fichas alante tiene que ser enemiga para trampa
+                        out = true;
+                    }
 
-                        --x2;
-                        --y2;
-                    }
-                    if (trap) {
-                        h += 10;
-                    }
+                    --x2;
+                    --y2;
                 }
-            
-            
-            
-            
-            
-        
-        
-        
-        
+                if (trap) {
+                    h += 10;
+                }
+            }
         }
         
         return h;
