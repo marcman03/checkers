@@ -11,26 +11,26 @@ import edu.upc.epsevg.prop.checkers.PlayerType;
 import edu.upc.epsevg.prop.checkers.SearchType;
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /**
  * Jugador aleatori
  * @author bernat
  */
-public class Pascualinho implements IPlayer, IAuto {
+public class Pascualinho_IDS implements IPlayer, IAuto {
 
     private String name;
-    private GameStatus s;
-    
     private boolean stop;
-    private int depth;
     private PlayerType player;
-
-    public Pascualinho(int depth) {
-        name = "Pascualinho";
+    private HashMap<Long, Value> hashTable;
+    int nodes=0;
+    public Pascualinho_IDS() {
+        name = "PascualinhoIDS";
         stop = false;
-        this.depth = depth;
+        hashTable=new HashMap<>();
     }
     
     @Override
@@ -44,6 +44,8 @@ public class Pascualinho implements IPlayer, IAuto {
      */
     @Override
     public void timeout() {
+        //System.out.println("SE ACABO el tiempo");
+     
         stop = true;
     }
 
@@ -55,70 +57,150 @@ public class Pascualinho implements IPlayer, IAuto {
      * @return el moviment que fa el jugador.
      */
     @Override
-    public PlayerMove move(GameStatus s) {
-        player = s.getCurrentPlayer();
+    public PlayerMove move(GameStatus sg) {
+        player = sg.getCurrentPlayer();
+        
+        int depth = 0; //pensar  si poner 0 y no restar 1
         
         int h = 0, index = 0;
+        ElMeuStatus s=new ElMeuStatus(sg);
+       
+        Value resultValue = hashTable.get(s.getHash());
         List<List<Point>> moves = get_list(s);
-        
-        for (int i = 0; i < moves.size(); ++i) {  
-            //System.out.println(moves.get(i));
-            GameStatus copy = new GameStatus(s);
-            copy.movePiece(moves.get(i));
-                
-            int aux = minmax(copy, depth-1, Integer.MIN_VALUE, Integer.MAX_VALUE,false);
-         //   System.out.println(aux);
-            if (i == 0) {
-                h = aux;
-                index = i;
-            }  
-            else {
-                if (aux > h) {
-                    h = aux;
-                    index = i;
-                }
-            }
+
+        if (resultValue != null){
+
+            moves.add(0, resultValue.getMove());
         }
         
+        //PRUEBAS .-----------------------------
+ 
+   //---------------------------------
+        while (!stop) {
+            for (int i = 0; i < moves.size(); ++i) {  
+                //System.out.println(moves.get(i));
+                ElMeuStatus copy = new ElMeuStatus(s);
+                copy.movePiece(moves.get(i));
+                int aux = minmax(copy, player, depth, Integer.MIN_VALUE, Integer.MAX_VALUE,false);
+                
+                if (stop)break;
+                if (i == 0) {
+                    h = aux;
+                    index = i;
+                }  
+                else {
+                    if (aux > h) {
+                        h = aux;
+                        index = i;
+                    }
+                }
+                
+                Value v= new Value(moves.get(index), depth);
+                if(resultValue!=null){
+                    if (depth> resultValue.getDepth())hashTable.put(s.getHash(),v);
+                
+                }
+                else{
+                    hashTable.put(s.getHash(),v);
+                }
+            }
+            
+            ++depth;
+            /*
+            System.out.println("Contenido de la tabla hash:");
+        for (HashMap.Entry<Long, ElMeuStatus> entry : hashTable.entrySet()) {
+            Long key = entry.getKey();
+            ElMeuStatus value = entry.getValue();
+            System.out.println(value.toString());
+            System.out.println("hash: " + key);
+            System.out.println("-------------------------");
+            }
+           */
+        }
+        
+        System.out.println("nodes: " + nodes);
+        System.out.println("depth: " + depth);
+        stop=false;
+
         return new PlayerMove(moves.get(index), 0L, 0, SearchType.MINIMAX);          
     }
     
-    public int minmax(GameStatus s,/* PlayerType player,*/ int depth, int alpha, int beta, boolean max) {
+    public int minmax(ElMeuStatus s, PlayerType player, int depth, int alpha, int beta, boolean max) {
+        ++nodes;
         if (depth == 0 || s.checkGameOver() || !s.currentPlayerCanMove()) {
-            return getHeuristic(s, player);
-           
+            if (!max) return getHeuristic(s, player);
+            else return getHeuristic(s, PlayerType.opposite(player));
         }
         else {
-                
+            Value resultValue = hashTable.get(s.getHash());
             List<List<Point>> moves = get_list(s);
-            for (int i = 0; i < moves.size(); ++i) {
-                GameStatus copy = new GameStatus(s);
+            
+            if (resultValue != null){
+             
+                moves.add(0, resultValue.getMove());
+            }
+            
+            int index = 0;
+            int hmax = 0;
+            int hmin = 0;
+            for ( int i = 0; i < moves.size(); ++i) {
+                if (stop)break;
+                ElMeuStatus copy = new ElMeuStatus(s);
                 copy.movePiece(moves.get(i));
                 
-                int h = minmax(copy, depth-1, alpha, beta, !max);
-
+               
+                
+                int h = minmax(copy, PlayerType.opposite(player), depth-1, alpha, beta, !max);
+                if (i == 0) {
+                    hmax = h;
+                    hmin = h;
+                } 
+                else{
+                    if (max) {
+                        if (h > hmax){
+                            hmax = h;
+                            index = i;
+                        }
+                    }
+                    else {
+                        if (h < hmin){
+                            hmin = h;
+                            index = i;
+                        }
+                    }
+                
+                }
                 if (max) alpha = Math.max(alpha, h);
                 else beta = Math.min(beta, h);
 
                 if (alpha >= beta) break; // Alpha-Beta Pruning
             }
-        return max ? alpha : beta;
+            
+            Value v= new Value(moves.get(index), depth);
+            if(resultValue!=null){
+                if (depth> resultValue.getDepth())hashTable.put(s.getHash(),v);
+
+            }
+            else{
+                hashTable.put(s.getHash(),v);
+            }
+            return max ? alpha : beta;
         }
     }
     
-    public int getHeuristic(GameStatus s,PlayerType team){
+   public int getHeuristic(ElMeuStatus s,PlayerType team){
         //System.out.println(""+s.toString());
         int h = 0;
         h = count_pieces(s, team) - count_pieces(s, PlayerType.opposite(team))
-            + count_triangles(s, team)- count_triangles(s, PlayerType.opposite(team)) +
-            trap(s, team)-trap(s, PlayerType.opposite(team));
-     
+            + count_triangles(s, team)- count_triangles(s, PlayerType.opposite(team))+
+             trap(s, team) -trap(s, PlayerType.opposite(team));
+       //System.out.println("hash: "+s.getHash(team));
         //System.out.println("H"+h);
        // System.out.println("==================================00");
         return h;
     }
     
-    public int count_pieces (GameStatus s, PlayerType team) {
+    public int count_pieces (ElMeuStatus s, PlayerType team) {
         int h=0;
         for (int y = 0; y < s.getSize(); ++y) {
             for (int x = 0; x < s.getSize(); ++x) { //TODO: recorrer bien madafaka + comprobaer si va bien
@@ -135,7 +217,7 @@ public class Pascualinho implements IPlayer, IAuto {
         return h;
     }
     
-    public int count_triangles (GameStatus s, PlayerType team) {
+    public int count_triangles (ElMeuStatus s, PlayerType team) {
         int h=0;
         for (int y = 0; y < s.getSize(); ++y) {
             for (int x = 0; x < s.getSize(); ++x) { //TODO: recorrer bien madafaka + comprobaer si va bien
@@ -158,7 +240,7 @@ public class Pascualinho implements IPlayer, IAuto {
         return h;
     }
     
-    public int comprovate_triangle (GameStatus s, CellType c, int x, int y) {
+    public int comprovate_triangle (ElMeuStatus s, CellType c, int x, int y) {
         int r = 0;
         
         if (c == CellType.P1) {
@@ -185,7 +267,7 @@ public class Pascualinho implements IPlayer, IAuto {
         return r;
     }
     
-    public int trap (GameStatus s, PlayerType player) {
+    public int trap (ElMeuStatus s, PlayerType player) {
         int h = 0;
         
         CellType c = CellType.P1;
@@ -210,7 +292,7 @@ public class Pascualinho implements IPlayer, IAuto {
         return h;
     }
     
-    public int comprovate_trap(GameStatus s, CellType c, int x, int y) {
+    public int comprovate_trap(ElMeuStatus s, CellType c, int x, int y) {
         int h = 0;
         boolean out = false;
         boolean trap = false;
@@ -244,7 +326,7 @@ public class Pascualinho implements IPlayer, IAuto {
                     ++y2;
                 }
                 if (trap) {
-                    h += 30;
+                    h += 10;
                 }
             }
             
@@ -276,7 +358,7 @@ public class Pascualinho implements IPlayer, IAuto {
                     ++y2;
                 }
                 if (trap) {
-                    h += 30;
+                    h += 10;
                 }
             }
         } 
@@ -312,7 +394,7 @@ public class Pascualinho implements IPlayer, IAuto {
                         --y2;
                     }
                     if (trap) {
-                        h += 30;
+                        h += 10;
                     }
                 }
             
@@ -329,42 +411,34 @@ public class Pascualinho implements IPlayer, IAuto {
             
             if (!out) {
                    
-                    while (x2 >=0 & y2 >=0   & !out) {
-                        //System.out.println("x: "+ x +"y: "+y);
+                while (x2 >=0 & y2 >=0   & !out) {
+                    //System.out.println("x: "+ x +"y: "+y);
 
-                        if (x-x2 == 1) {
-                            if (s.getPos(x2, y2) != CellType.EMPTY)out = true;// una ficha alante tiene que ser espacio para seguir
-                        }
-                        if (x-x2 == 2) {
-                            if (s.getPos(x2, y2) != CellType.P2 & s.getPos(x2, y2) != CellType.P2Q) out = true; // 2 fichas alante que ser del mismo equipo para seguir
-                        }
-                        if (x-x2 == 3) {
-                            if (s.getPos(x2, y2) == CellType.P1 | s.getPos(x2, y2) == CellType.P1Q) trap = true;//3 fichas alante tiene que ser enemiga para trampa
-                            out = true;
-                        }
+                    if (x-x2 == 1) {
+                        if (s.getPos(x2, y2) != CellType.EMPTY)out = true;// una ficha alante tiene que ser espacio para seguir
+                    }
+                    if (x-x2 == 2) {
+                        if (s.getPos(x2, y2) != CellType.P2 & s.getPos(x2, y2) != CellType.P2Q) out = true; // 2 fichas alante que ser del mismo equipo para seguir
+                    }
+                    if (x-x2 == 3) {
+                        if (s.getPos(x2, y2) == CellType.P1 | s.getPos(x2, y2) == CellType.P1Q) trap = true;//3 fichas alante tiene que ser enemiga para trampa
+                        out = true;
+                    }
 
-                        --x2;
-                        --y2;
-                    }
-                    if (trap) {
-                        h += 30;
-                    }
+                    --x2;
+                    --y2;
                 }
-            
-            
-            
-            
-            
-        
-        
-        
-        
+                if (trap) {
+                    h += 10;
+                }
+            }
         }
         
         return h;
     }
     
-    public static List<List<Point>> get_list(GameStatus s) {
+    public static List<List<Point>> get_list(ElMeuStatus s) {
+        
         List<List<Point>> moves = new ArrayList<>();
         List<MoveNode> moves_pos =  s.getMoves();
         for (int i = 0; i < moves_pos.size(); ++i) {
