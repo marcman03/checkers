@@ -55,17 +55,57 @@ public class Heuristica {
         for (int y = 0; y < s.getSize(); ++y) {
             for (int x = 0; x < s.getSize(); ++x) { //TODO: recorrer bien madafaka + comprobaer si va bien
                 if (team == PlayerType.PLAYER1) {
-                    if (s.getPos(x, y) == CellType.P1) h += Math.pow(y+1, 2);
-                    else if (s.getPos(x, y) == CellType.P1Q) h += 100; //TODO: las reinas no dan un buen valor
+                    if (s.getPos(x, y) == CellType.P1) h += 10 + haltura(x,y,team);
+                    else if (s.getPos(x, y) == CellType.P1Q) h += 50; //TODO: las reinas no dan un buen valor
                 }
                 else {
-                    if (s.getPos(x, y) == CellType.P2) h += Math.pow(s.getSize()-y,2);
-                    else if (s.getPos(x, y) == CellType.P2Q) h += 100;
+                    if (s.getPos(x, y) == CellType.P2) h += 10 + haltura(x,y,team);
+                    else if (s.getPos(x, y) == CellType.P2Q) h += 50;
                 }
             }
         }
         return h;
     }
+    private int haltura(int x, int y,PlayerType team){
+        int h;
+        if (team == PlayerType.PLAYER1){
+            switch (y) {
+                case 0: h = 1;
+                case 1: h= 0;
+                case 2:  h=3;
+                case 3: h=6;
+                case 4: h= 10;
+                case 5: h= 15;
+                case 6: h= 21;
+                case 7: h=28;
+                default: h= 0;
+            }
+            if((y== 0&& x==1)||(y==1 &&x==0))h=+10;
+
+        }
+        
+
+
+        else{
+            switch (y) {
+               case 0: h= 28;
+               case 1: h= 21;
+               case 2: h= 15;
+               case 3: h= 10;
+               case 4: h= 6;
+               case 5: h= 3;
+               case 6: h= 0;
+               case 7: h= 1;
+               default: h= 0;
+           }
+          if((y== 7&& x==6)||(y==6 &&x==7))h=+10;
+           
+        }
+        return h;
+    
+    }
+    
+    
     
     public int count_triangles (GameStatus s, PlayerType team) {
         int h=0;
@@ -74,14 +114,14 @@ public class Heuristica {
                 if (team == PlayerType.PLAYER1) {
                     if (y > 0) {
                         if (s.getPos(x, y) == CellType.P1) {
-                            h += 5 * comprovate_triangle(s, CellType.P1, x, y);
+                            h += 4 * comprovate_triangle(s, CellType.P1, x, y);
                         }
                     }    
                 }
                 else {
                     if (y < s.getSize()-1) {
                         if (s.getPos(x, y) == CellType.P2) {
-                            h += 5 * comprovate_triangle(s, CellType.P2, x, y);
+                            h += 4 * comprovate_triangle(s, CellType.P2, x, y);
                         }
                     }    
                 }
@@ -181,7 +221,7 @@ public class Heuristica {
                     ++y2;
                 }
                 if (trap) {
-                    h += 10;
+                    h += 4;
                 }
             }
             
@@ -220,7 +260,7 @@ public class Heuristica {
                     ++y2;
                 }
                 if (trap) {
-                    h += 10;
+                    h += 4;
                 }
             }
         } 
@@ -259,7 +299,7 @@ public class Heuristica {
                     --y2;
                 }
                 if (trap) {
-                    h += 10;
+                    h += 4;
                 }
             }
             
@@ -298,7 +338,7 @@ public class Heuristica {
                     --y2;
                 }
                 if (trap) {
-                    h += 10;
+                    h += 4;
                 }
             }
         }
