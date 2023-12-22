@@ -64,7 +64,15 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
         
         int h = 0, index = 0;
         ElMeuStatus s=new ElMeuStatus(sg);
+       
+        Value resultValue = hashTable.get(s.getHash());
         List<List<Point>> moves = get_list(s);
+
+        if (resultValue != null){
+            List<Point>aux=moves.get(resultValue.getIndex());
+            moves.remove(resultValue.getIndex());
+            moves.add(0, aux);
+        }
         
         //PRUEBAS .-----------------------------
  
@@ -87,16 +95,8 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                         index = i;
                     }
                 }
-                Value resultValue= hashTable.get(s.getHash());
-                Value v= new Value(moves.get(index), depth);
-                if(resultValue!=null){
-                    if (depth> resultValue.getDepth())hashTable.put(s.getHash(),v);
                 
-                }
-                else{
-                    hashTable.put(s.getHash(),v);
-                }
-            }
+             
             
             ++depth;
             /*
@@ -109,6 +109,16 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
             System.out.println("-------------------------");
             }
            */
+        }
+     
+    }
+        Value v= new Value(index, depth);
+        if(resultValue!=null){
+            if (depth> resultValue.getDepth())hashTable.put(s.getHash(),v);
+
+        }
+        else{
+            hashTable.put(s.getHash(),v);
         }
         
         System.out.println("nodes: " + nodes);
@@ -128,14 +138,19 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
             Value resultValue = hashTable.get(s.getHash());
             List<List<Point>> moves = get_list(s);
             
+
             if (resultValue != null){
-             
-                moves.add(0, resultValue.getMove());
+                List<Point>aux=moves.get(resultValue.getIndex());
+                moves.remove(resultValue.getIndex());
+                moves.add(0, aux);
+                
+               
             }
+
             
             int index = 0;
-            int hmax = 0;
-            int hmin = 0;
+            //int hmax = 0;
+            //int hmin = 0;
             for ( int i = 0; i < moves.size(); ++i) {
                 if (stop)break;
                 ElMeuStatus copy = new ElMeuStatus(s);
@@ -144,6 +159,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                
                 
                 int h = minmax(copy, PlayerType.opposite(player), depth-1, alpha, beta, !max);
+                /*
                 if (i == 0) {
                     hmax = h;
                     hmin = h;
@@ -163,13 +179,22 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
                     }
                 
                 }
-                if (max) alpha = Math.max(alpha, h);
-                else beta = Math.min(beta, h);
+*/
+                if (max) {
+                    if(h>alpha)index=i;
+                    alpha = Math.max(alpha, h);
+                    
+                }
+                else{
+                    if(h<beta)index=i;
+                    beta = Math.min(beta, h);
+                    
+                }
 
                 if (alpha >= beta) break; // Alpha-Beta Pruning
             }
             
-            Value v= new Value(moves.get(index), depth);
+            Value v= new Value(index, depth);
             if(resultValue!=null){
                 if (depth> resultValue.getDepth())hashTable.put(s.getHash(),v);
 
@@ -177,6 +202,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
             else{
                 hashTable.put(s.getHash(),v);
             }
+
             return max ? alpha : beta;
         }
     }
@@ -208,7 +234,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
             }
         }
         return h;
-    }
+                }
     
     public int count_triangles (ElMeuStatus s, PlayerType team) {
         int h=0;
