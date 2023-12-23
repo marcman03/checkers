@@ -45,14 +45,15 @@ public class ElMeuStatus extends GameStatus {
      
     @Override
     public void movePiece(List<Point> move) {
-        PlayerType player= getCurrentPlayer();
-        updateHash(move, player);
+        updateHash(move);
         super.movePiece(move);
+        
 
         // Actualiza el hash después de realizar el movimiento.
      
     }
-    private void updateHash(List<Point>move,PlayerType player){
+    private void updateHash(List<Point>move){
+        
         Point firstPoint=move.get(0);
         for(int i=0; i<move.size();++i){
             Point currentPoint=move.get(i);
@@ -127,6 +128,7 @@ public class ElMeuStatus extends GameStatus {
         return hash;
     
     }
+    
 
     
     
