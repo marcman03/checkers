@@ -14,23 +14,23 @@ import java.util.List;
 import java.util.List;
 
 public class Value {
-    private List<Point> move;
+    private int index;
     private int depth;
 
     // Constructor
-    public Value(List<Point> move, int depth) {
-        this.move = move;
+    public Value(int index , int depth) {
+        this.index = index;
         this.depth = depth;
     }
 
     // Getter para move
-    public List<Point> getMove() {
-        return move;
+    public int getIndex() {
+        return index;
     }
 
     // Setter para move
-    public void setMove(List<Point> move) {
-        this.move = move;
+    public void setIndex(int index) {
+        this.index = index;
     }
 
     // Getter para depth
