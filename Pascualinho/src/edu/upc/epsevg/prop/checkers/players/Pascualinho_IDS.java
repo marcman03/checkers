@@ -61,7 +61,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
     public PlayerMove move(GameStatus sg) {
         player = sg.getCurrentPlayer();
         
-        int depth = 0; 
+        int depth = 6; 
         
         int h = 0, index = 0;
         ElMeuStatus s=new ElMeuStatus(sg);
