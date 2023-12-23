@@ -22,15 +22,15 @@ public class Heuristica_IDS {
         int pieces_1 = count_pieces(s,team);
         int pieces_2 = count_pieces(s,PlayerType.opposite(team));
         
-        int triangles_1 = count_triangles(s, team);
-        int triangles_2 = count_triangles(s, PlayerType.opposite(team));
+        //int triangles_1 = count_triangles(s, team);
+        //int triangles_2 = count_triangles(s, PlayerType.opposite(team));
         
-        int trap_1 = trap(s, team);
-        int trap_2 = trap(s, PlayerType.opposite(team));
+        //int trap_1 = trap(s, team);
+        //int trap_2 = trap(s, PlayerType.opposite(team));
         
         int h = pieces_1 - pieces_2
-                + triangles_1 - triangles_2
-                + trap_1 - trap_2
+                //+ triangles_1 - triangles_2
+                //+ trap_1 - trap_2
                 ;
      
         //System.out.println("Heuristica: " + h);
@@ -49,12 +49,12 @@ public class Heuristica_IDS {
         for (int y = 0; y < s.getSize(); ++y) {
             for (int x = 0; x < s.getSize(); ++x) { //TODO: recorrer bien madafaka + comprobaer si va bien
                 if (team == PlayerType.PLAYER1) {
-                    if (s.getPos(x, y) == CellType.P1) h += 10 + haltura(x,y,team);
-                    else if (s.getPos(x, y) == CellType.P1Q) h += 50; //TODO: las reinas no dan un buen valor
+                    if (s.getPos(x, y) == CellType.P1) h += 100 + haltura(x,y,team);
+                    else if (s.getPos(x, y) == CellType.P1Q) h += 140; //TODO: las reinas no dan un buen valor
                 }
                 else {
-                    if (s.getPos(x, y) == CellType.P2) h += 10 + haltura(x,y,team);
-                    else if (s.getPos(x, y) == CellType.P2Q) h += 50;
+                    if (s.getPos(x, y) == CellType.P2) h += 100 + haltura(x,y,team);
+                    else if (s.getPos(x, y) == CellType.P2Q) h += 140;
                 }
             }
         }
