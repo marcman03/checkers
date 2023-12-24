@@ -1,45 +1,67 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package edu.upc.epsevg.prop.checkers.players;
 
 import java.awt.Point;
 import java.util.List;
 
 /**
- *
- * @author marc
+ * Value
+ * @author Marc Pascual Ivan Garcia
  */
-import java.util.List;
-
 public class Value {
     private int index;
     private int depth;
 
-    // Constructor
+    /**
+    * Constructora
+    * 
+    * @param index int valor d'index
+    * @param depth Profunditat
+    */
     public Value(int index , int depth) {
+        
         this.index = index;
         this.depth = depth;
     }
 
-    // Getter para move
+    /**
+    * Getter per index
+    * 
+    * @return index
+    */
     public int getIndex() {
+        
         return index;
     }
 
-    // Setter para move
+    /**
+    * Setter per index
+    * 
+    * @param index 
+    */
     public void setIndex(int index) {
+        
         this.index = index;
+        
     }
 
-    // Getter para depth
+    /**
+    * Getter per depth
+    * 
+    * @return Profunditat
+    */
     public int getDepth() {
+        
         return depth;
+        
     }
 
-    // Setter para depth
+    /**
+    * Sether per depth
+    * 
+    * @param Profunditat
+    */
     public void setDepth(int depth) {
+        
         this.depth = depth;
     }
 }
