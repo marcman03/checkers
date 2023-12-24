@@ -61,11 +61,11 @@ public class Heuristica {
             for (int x = 0; x < s.getSize(); ++x) { //TODO: recorrer bien madafaka + comprobaer si va bien
                 if (team == PlayerType.PLAYER1) {
                     if (s.getPos(x, y) == CellType.P1) h += 100 + sum_y(x,y,team) + sum_x(x,y,team);
-                    else if (s.getPos(x, y) == CellType.P1Q) h += 150; //TODO: las reinas no dan un buen valor
+                    else if (s.getPos(x, y) == CellType.P1Q) h += 150 + sum_y2(x,y,team) + sum_x(x,y,team); //TODO: las reinas no dan un buen valor
                 }
                 else {
                     if (s.getPos(x, y) == CellType.P2) h += 100 + sum_y(x,y,team) + sum_x(x,y,team);
-                    else if (s.getPos(x, y) == CellType.P2Q) h += 150;
+                    else if (s.getPos(x, y) == CellType.P2Q) h += 150 + sum_y2(x,y,team) + sum_x(x,y,team);
                 }
             }
         }
@@ -98,6 +98,40 @@ public class Heuristica {
                case 5: h= 3;
                case 6: h= 0;
                case 7: h= 1;
+               default: h= 0;
+           }
+          if((y== 7&& x==6)||(y==6 &&x==7))h=+10; 
+        }
+        return h;
+    }
+    
+    private int sum_y2(int x, int y,PlayerType team){
+        int h;
+        if (team == PlayerType.PLAYER1){
+            switch (y) {
+                case 0: h = 28;
+                case 1: h= 21;
+                case 2:  h=15;
+                case 3: h=10;
+                case 4: h= 6;
+                case 5: h= 3;
+                case 6: h= 1;
+                case 7: h=0;
+                default: h= 0;
+            }
+            if((y== 0&& x==1)||(y==1 &&x==0))h=+10;
+
+        }
+        else{
+            switch (y) {
+               case 0: h= 0;
+               case 1: h= 1;
+               case 2: h= 3;
+               case 3: h= 6;
+               case 4: h= 10;
+               case 5: h= 15;
+               case 6: h= 21;
+               case 7: h= 28;
                default: h= 0;
            }
           if((y== 7&& x==6)||(y==6 &&x==7))h=+10; 
@@ -217,8 +251,10 @@ public class Heuristica {
             }
             
             if (y > 0) {
-                if (x+2 < s.getSize()-1) {
-                    if (s.getPos(x+3, y-1) != CellType.P1 & s.getPos(x+3, y-1) != CellType.P1Q) out = true;
+                if (x < s.getSize()-3) {
+                    if (s.getPos(x+2, y) == CellType.P1 | s.getPos(x+2, y) == CellType.P1Q) {
+                        if (s.getPos(x+3, y-1) != CellType.P1 & s.getPos(x+3, y-1) != CellType.P1Q) out = true;
+                    }
                 }
             }
             
@@ -256,8 +292,10 @@ public class Heuristica {
             }
             
             if (y > 0) {
-                if (x-2 > 0) {
-                    if (s.getPos(x-3, y-1) != CellType.P1 & s.getPos(x-3, y-1) != CellType.P1Q) out = true;
+                if (x > 2) {
+                    if (s.getPos(x-2, y) == CellType.P1 | s.getPos(x-2, y) == CellType.P1Q) {
+                        if (s.getPos(x-3, y-1) != CellType.P1 & s.getPos(x-3, y-1) != CellType.P1Q) out = true;
+                    }
                 }
             }
            
@@ -295,8 +333,10 @@ public class Heuristica {
             }
             
             if (y < s.getSize()-1) {
-                if (x+2 < s.getSize()-1) {
-                    if (s.getPos(x+3, y+1) != CellType.P2 & s.getPos(x+3, y+1) != CellType.P2Q) out = true;
+                if (x < s.getSize()-3) {
+                    if (s.getPos(x+2, y) == CellType.P2 | s.getPos(x+2, y) == CellType.P2Q) {
+                        if (s.getPos(x+3, y+1) != CellType.P2 & s.getPos(x+2, y) != CellType.P2Q) out = true;
+                    }
                 }
             }
             
@@ -334,8 +374,10 @@ public class Heuristica {
             }
             
             if (y < s.getSize()-1 ) {
-                if (x-2 > 0) {
-                    if (s.getPos(x-3, y+1) != CellType.P2 & s.getPos(x-3, y+1) != CellType.P2Q) out = true;
+                if (x > 2) {
+                    if (s.getPos(x-2, y) == CellType.P2 | s.getPos(x-2, y) == CellType.P2Q) {
+                        if (s.getPos(x-3, y+1) != CellType.P2 & s.getPos(x-3, y+1) != CellType.P2Q) out = true;
+                    }
                 }
             }
             
