@@ -11,15 +11,18 @@ import java.util.List;
 import java.util.Random;
 
 /**
- *
+ * ElMeuStatus
  * @author Marc Pascual Ivan Garcia
  */
 public class ElMeuStatus extends GameStatus {
+    
     private static final long[][][] zobristTable = new long[GameStatus.N][GameStatus.N][4];
     private static final long zobristTableDiferenciador;
     private long hash;
+    
     static {
-        // Inicializar la tabla Zobrist con valores aleatorios
+        
+        // Inicialitzar la tabla Zobrist amb valors aleatoris
         Random random = new Random();
         
         for (int i = 0; i < GameStatus.N; ++i) {
@@ -32,23 +35,46 @@ public class ElMeuStatus extends GameStatus {
         zobristTableDiferenciador = random.nextLong();
 
     }
+    
+    /**
+    * 
+    * @param tauler Matriu d'ints
+    */
     public ElMeuStatus(int [][] tauler){
+        
         super(tauler);
        
     }
     
-     public ElMeuStatus(GameStatus gs){
+    /**
+    * 
+    * @param gs Tauler i estat actual de joc.
+    */
+    public ElMeuStatus(GameStatus gs){
+         
         super(gs);
         hash= CalculateHash();
         
     }
      
+    /**
+    *
+    * 
+    * @param move Llista de punts
+    */
     @Override
     public void movePiece(List<Point> move) {
+        
         updateHash(move);
         super.movePiece(move);
+        
     }
-    //actualitza el hash del tauler tras fer un moviment. 
+    
+    /**
+    * Actualitza el hash del tauler després de fer un moviment. 
+    * 
+    * @param move Llista de punts
+    */
     private void updateHash(List<Point>move){
         
         Point firstPoint=move.get(0);
@@ -67,50 +93,80 @@ public class ElMeuStatus extends GameStatus {
                 capture= detectCapture(x,y,nextX,nextY);
             }
             if (nextPoint!=null){
-                hash ^=zobristTable[x][y][getPieceIndex(getPos(firstPoint.x, firstPoint.y))];// No estoy seguro si hay un problema si se convierte en reina justo
-                hash ^=zobristTable[nextX][nextY][getPieceIndex(getPos(firstPoint.x, firstPoint.y))];
-                //si existe una captura
+                hash ^=zobristTable[x][y][getPieceIndex(
+                                getPos(firstPoint.x, firstPoint.y))];
+                hash ^=zobristTable[nextX][nextY][getPieceIndex(
+                                getPos(firstPoint.x, firstPoint.y))];
+                
+                //Si existeix una captura
                 if (capture!= null){
-                    hash ^=zobristTable[capture.x][capture.y][getPieceIndex(getPos(capture.x, capture.y))];
+                    hash ^=zobristTable[capture.x][capture.y][getPieceIndex(
+                                     getPos(capture.x, capture.y))];
                 }       
             }
         }
     }
-    //retorna el punt on es capturat una ficha tenint una posicio inicial x y y una final nextX nextY
-    //Si no hi ha cap captura retorna null
+    
+    /**
+    * Retorna el punt on es capturat una ficha tenint una posicio inicial x y i 
+    * una final nextX nextY
+    * Si no hi ha cap captura retorna null
+    * 
+    * @param x Posició x al tauler
+    * @param y Posició y al tauler
+    * @param nextx Posició següent al tauler
+    * @param nexty Posició següent al tauler
+    */
+    
     private Point detectCapture(int x, int y, int nextX, int nextY){
+        
         if (Math.abs(nextX - x) == 2 && Math.abs(nextY - y) == 2) {
+            
             int capturedX = (x +nextX) / 2;
             int capturedY = (y + nextY) / 2;
+            
             return(new Point(capturedX,capturedY));
         }
+        
         return null;
     }
-    //retorna segons la peça que es un index o un altre
     
+    /**
+    * Retorna segons la fitxa un index
+    * 
+    * @param type tipus de fitxa
+    */
     private int getPieceIndex(CellType type) {
-        if (type == CellType.P1) {
-            return 0;
-        } else if (type == CellType.P1Q) {
-            return 1;
-        } else if (type == CellType.P2) {
-            return 2;
-        } else if (type == CellType.P2Q) {
-            return 3;
-        }
-        return -1; // Valor por defecto o error.
+        
+        if (type == CellType.P1) return 0;
+            
+        else if (type == CellType.P1Q) return 1;
+            
+        else if (type == CellType.P2) return 2;
+            
+        else if (type == CellType.P2Q) return 3;
+            
+        return -1; // Valor per defecto o error.
+        
     }
     
-    //retorna el hash de un tauler, 
+    /**
+    * Retorna el hash d'un tauler 
+    * 
+    */
     private long CalculateHash() {
+        
         long h = 0;
+        
         for (int y = 0; y < getSize(); ++y) {
             for (int x = 0; x < getSize(); ++x) {
+                
                 CellType type = getPos(x, y);
                
                 if (type != CellType.EMPTY) {
                     
                     h ^= zobristTable[x][y][getPieceIndex(type)];
+                    
                 }
             }
         }
@@ -118,11 +174,14 @@ public class ElMeuStatus extends GameStatus {
         return h;
     }
     
-    //Retorna el hash del tauler,
-    //tenint en compte que si un tauler es igual que un altre pero de players diferents 
-    //el hash es difetent
+    /**
+    * Retorna el hash d'un tauler diferenciant players 
+    * 
+    */
     public long getHash(){
-        if (this.getCurrentPlayer() == PlayerType.PLAYER1) return hash^ zobristTableDiferenciador;
+        
+        if (this.getCurrentPlayer() == PlayerType.PLAYER1) 
+            return hash^ zobristTableDiferenciador;
         return hash;
     
     }
