@@ -32,11 +32,13 @@ public class Pascualinho implements IPlayer, IAuto {
     private PlayerType player;
     private int nodes;
     private boolean lategame;
+    private boolean trap;
 
     public Pascualinho(int depth) {
         name = "Pascualinho";
         stop = false;
         lategame = false;
+        trap = false;
         this.depth = depth;
         nodes = 0;
     }
@@ -70,7 +72,13 @@ public class Pascualinho implements IPlayer, IAuto {
         //System.out.println("");
         player = s.getCurrentPlayer();
         
-        if (s.getEmptyCellsCount() > s.getSize()*s.getSize()-10) lategame = true; 
+        int pieces1 = s.getScore(player);
+        int pieces2 = s.getScore(PlayerType.opposite(player));
+        
+        if (pieces1 + pieces2 <= 10) lategame = true;
+        
+        if (pieces1 > pieces2) trap = true;
+        else trap = false;
             
         int h = 0, index = 0;
         List<List<Point>> moves = get_list(s);
@@ -102,7 +110,7 @@ public class Pascualinho implements IPlayer, IAuto {
         if (depth == 0 || s.checkGameOver() || !s.currentPlayerCanMove()) {
             if (!lategame) {
                 Heuristica h = new Heuristica();
-                return h.getHeuristic(s, player);
+                return h.getHeuristic(s, player, trap);
             }
             else {
                 Heuristica2 h = new Heuristica2();
