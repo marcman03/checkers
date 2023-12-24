@@ -15,11 +15,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import edu.upc.epsevg.prop.checkers.players.Heuristica_IDS;
 
 
 /**
  * Jugador aleatori
- * @author bernat
+ * @author Marc Pascual i Ivan Garcia
  */
 public class Pascualinho_IDS implements IPlayer, IAuto {
 
@@ -28,6 +29,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
     private PlayerType player;
     private HashMap<Long, Value> hashTable;
     int nodes=0;
+    boolean trap;
     public Pascualinho_IDS() {
         name = "PascualinhoIDS";
         stop = false;
@@ -54,7 +56,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
      * Decideix el moviment del jugador donat un tauler i un color de peça que
      * ha de posar.
      *
-     * @param s Tauler i estat actual de joc.
+     * @param sg Tauler i estat actual de joc.
      * @return el moviment que fa el jugador.
      */
     @Override
@@ -65,7 +67,14 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
         
         int h = 0, index = 0;
         ElMeuStatus s=new ElMeuStatus(sg);
-       
+       int pieces1=s.getScore(player);
+        int pieces2=s.getScore(PlayerType.opposite(player));
+        //si tenim més peces farem una trampa sino no
+        if(pieces1>pieces2)trap=true;
+        else{
+            trap=false;
+        }
+        
         Value resultValue = hashTable.get(s.getHash());
         List<List<Point>> moves = get_list(s);
 
@@ -76,10 +85,11 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
            moves.add(0, aux);
         }
         
-        //PRUEBAS .-----------------------------
- 
-   //---------------------------------
-   int bestmove=0;
+       
+        int bestmove=0;
+        // Va augmentant la depth fins que stop== true
+        // bestmove= es queda amb el millor moviment es a dir si para en mitad
+        //del nivell es guarda el del nivell anterior.
         while (!stop) {
             
             for (int i = 0; i < moves.size(); ++i) {  
@@ -122,11 +132,14 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
         return new PlayerMove(moves.get(bestmove), 0L, 0, SearchType.MINIMAX);          
     }
     
+    //Funcio recursiva on recorre tot el arbre de posibles moviments i retorna la heuristica del millor moviment.
+    //depth va disminuint fins a arribar a 0 o fins que stop=true
+    
     public int minmax(ElMeuStatus s, int depth, int alpha, int beta, boolean max) {
         ++nodes;
         if (depth == 0 || s.checkGameOver() || !s.currentPlayerCanMove()) {
             Heuristica_IDS h=new Heuristica_IDS();
-            return h.getHeuristic(s, player);
+            return h.getHeuristic(s, player,trap);
            
         }
         else {
@@ -179,7 +192,7 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
         }
     }
     
-   
+   //Retorna una llista de tots els posibles moviments
     public static List<List<Point>> get_list(ElMeuStatus s) {
         
         List<List<Point>> moves = new ArrayList<>();
@@ -191,7 +204,8 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
         
         return moves;
     }
-    
+    // recorre tots el arbre i posa els moviments en una llista de moviments, 
+    //S'actualitza el parametre list.
     public static void recorre_arbre(MoveNode node, List<List<Point>> list) {
         if (node.getChildren().isEmpty()) {
             List<Point> points = new ArrayList<>();
