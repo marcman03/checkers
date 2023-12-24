@@ -5,68 +5,81 @@
 package edu.upc.epsevg.prop.checkers.players;
 
 import edu.upc.epsevg.prop.checkers.CellType;
-
+import edu.upc.epsevg.prop.checkers.GameStatus;
+import edu.upc.epsevg.prop.checkers.MoveNode;
 import edu.upc.epsevg.prop.checkers.PlayerType;
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
- * @author marc
+ * @author ivanciu,pascual
  */
-public class Heuristica_IDS {
-    private int piece=100;
-    private int pieceQ=140;
-    public Heuristica_IDS(){}
+public class Heuristica_IDS{
     
-     public int getHeuristic(ElMeuStatus s,PlayerType team){
-   
+    public Heuristica_IDS() {
         
-        int pieces_1 = count_pieces(s,team);
-        int pieces_2 = count_pieces(s,PlayerType.opposite(team));
+    }
 
+    //Retorna un valor heurístic donat un tauler s, un PlayerType team i un 
+    //booleà trap
+    public int getHeuristic(ElMeuStatus s, PlayerType player, boolean trap){
         
-        int trap_1=0;
-        int trap_2=0;
-     
-
-        if (s.getScore(team)-1> s.getScore(PlayerType.opposite(team))) {
-          
-            trap_1 = trap(s, team);
-
-           
-        }
-        else{
-           trap_2 = trap(s, PlayerType.opposite(team));
-        }
-       
+        //És crida a cada funció heurística pel nostre jugador i pel contrari
+        //i després es resten els 2 valors
         
-      
+        int pieces_1 = count_pieces(s,player);
+        int pieces_2 = count_pieces(s,PlayerType.opposite(player));
+        
+        int triangles_1 = count_triangles(s, player);
+        int triangles_2 = count_triangles(s, PlayerType.opposite(player));
+        
+        int trap_1 = 0;
+        int trap_2 = 0;
+        
+        if (trap) {
+            trap_1 = trap(s, player);
+            trap_2 = trap(s, PlayerType.opposite(player));
+        }    
         
         int h = pieces_1 - pieces_2
-               
+                + triangles_1 - triangles_2
                 + trap_1 - trap_2
                 ;
-   
-
+     
+        
         return h;
     }
     
-    public int count_pieces (ElMeuStatus s, PlayerType team) {
+    //Retorna un valor donat un tauler s i un PlayerType player
+    public int count_pieces (GameStatus s, PlayerType player) {
+        
         int h=0;
+        
+        //Recorrem el tauler i per cada fitxa que trobem es suma a h un valor
+        //segons si és una reina o no i segons la posició x i y de la fitxa al 
+        //tauler
         for (int y = 0; y < s.getSize(); ++y) {
-            for (int x = 0; x < s.getSize(); ++x) { //TODO: recorrer bien madafaka + comprobaer si va bien
-                if (team == PlayerType.PLAYER1) {
-                    if (s.getPos(x, y) == CellType.P1) h += piece + haltura(x,y,team);
-                    else if (s.getPos(x, y) == CellType.P1Q) h += pieceQ; //TODO: las reinas no dan un buen valor
+            for (int x = 0; x < s.getSize(); ++x) { 
+                
+                if (player == PlayerType.PLAYER1) {
+                    if (s.getPos(x, y) == CellType.P1) h += 100 
+                            + sum_y(x,y,player) + sum_x(x,y,player);
+                    else if (s.getPos(x, y) == CellType.P1Q) h += 150 + sum_y2(x,y,player) + sum_x(x,y,player); //TODO: las reinas no dan un buen valor
                 }
                 else {
-                    if (s.getPos(x, y) == CellType.P2) h += piece + haltura(x,y,team);
-                    else if (s.getPos(x, y) == CellType.P2Q) h += pieceQ;
+                    if (s.getPos(x, y) == CellType.P2) h += 100 
+                            + sum_y(x,y,player) + sum_x(x,y,player);
+                    else if (s.getPos(x, y) == CellType.P2Q) h += 150 + sum_y2(x,y,player) + sum_x(x,y,player);
                 }
             }
         }
         return h;
     }
-    private int haltura(int x, int y,PlayerType team){
+    
+    
+    private int sum_y(int x, int y,PlayerType team){
         int h;
         if (team == PlayerType.PLAYER1){
             switch (y) {
@@ -83,9 +96,6 @@ public class Heuristica_IDS {
             if((y== 0&& x==1)||(y==1 &&x==0))h=+10;
 
         }
-        
-
-
         else{
             switch (y) {
                case 0: h= 28;
@@ -98,16 +108,156 @@ public class Heuristica_IDS {
                case 7: h= 1;
                default: h= 0;
            }
-          if((y== 7&& x==6)||(y==6 &&x==7))h=+10;
-           
+          if((y== 7&& x==6)||(y==6 &&x==7))h=+10; 
         }
         return h;
+    }
+    
+    private int sum_y2(int x, int y,PlayerType team){
+        int h;
+        if (team == PlayerType.PLAYER1){
+            switch (y) {
+                case 0: h = 28;
+                case 1: h= 21;
+                case 2:  h=15;
+                case 3: h=10;
+                case 4: h= 6;
+                case 5: h= 3;
+                case 6: h= 1;
+                case 7: h=0;
+                default: h= 0;
+            }
+            if((y== 0&& x==1)||(y==1 &&x==0))h=+10;
+
+        }
+        else{
+            switch (y) {
+               case 0: h= 0;
+               case 1: h= 1;
+               case 2: h= 3;
+               case 3: h= 6;
+               case 4: h= 10;
+               case 5: h= 15;
+               case 6: h= 21;
+               case 7: h= 28;
+               default: h= 0;
+           }
+          if((y== 7&& x==6)||(y==6 &&x==7))h=+10; 
+        }
+        return h;
+    }
+    
+    private int sum_x(int x, int y,PlayerType team){
+        int h;
+        switch (x) {
+            case 0: h = 1;
+            case 1: h= 3;
+            case 2:  h=6;
+            case 3: h=10;
+            case 4: h= 15;
+            case 5: h= 6;
+            case 6: h= 3;
+            case 7: h=1;
+            default: h= 0;
+        }
+        return h;
+    }
+    
+    //Retorna un valor donat un tauler s i un PlayerType player
+    public int count_triangles (ElMeuStatus s, PlayerType player) {
+        
+        int h=0;
+        
+        //Recorrem el tauler i per cada fitxa que trobem es suma a h un valor
+        //segons si aquesta fitxa té darrera 1 o 2 fitxes més formant un 
+        //triangle o un mig triangle. També es té en compte si té una paret que
+        //actua com a protecció també
+        for (int y = 0; y < s.getSize(); ++y) {
+            for (int x = 0; x < s.getSize(); ++x) { 
+                
+                if (player == PlayerType.PLAYER1) {
+                    if (y > 0) {
+                        if (s.getPos(x, y) == CellType.P1 | 
+                            s.getPos(x, y) == CellType.P1Q) {
+                            
+                            h += 5 * get_triangles(s, PlayerType.PLAYER1,
+                                                    x, y);
+                        }
+                    }    
+                }
+                
+                else {
+                    if (y < s.getSize()-1) {
+                        if (s.getPos(x, y) == CellType.P2 |
+                            s.getPos(x, y) == CellType.P2Q) {
+                            
+                            h += 5 * get_triangles(s, PlayerType.PLAYER2,
+                                                    x, y);
+                        }
+                    }    
+                }
+            }
+        }
+        
+        return h;
+    }
+    
+    //Retorna el nombre de 1/2 triangles té una fitxa donat un tauler s, un 
+    //CellType c, i una posició x,y (posició de la fitxa c)
+    public int get_triangles (ElMeuStatus s, PlayerType player, int x, int y) {
+        
+        int half_triangle = 0;
+        
+        if (player == PlayerType.PLAYER1) {
+            
+            //Si no té una pared a l'esquerra, si té una fitxa del seu equip 
+            //sumem 1/2 triangle
+            if (x > 0) {
+                if (s.getPos(x-1, y-1) == CellType.P1 | 
+                    s.getPos(x-1, y-1) == CellType.P1Q) ++half_triangle; 
+            }
+            
+            //Si té una paret també sumem 1/2 triangle
+            else ++half_triangle;
+            
+            //Si no té una pared a la dreta, si té una fitxa del seu equip 
+            //sumem 1/2 triangle
+            if (x < s.getSize()-1) {
+                if (s.getPos(x+1, y-1) == CellType.P1 | 
+                    s.getPos(x+1, y-1) == CellType.P1Q) ++half_triangle;
+            }
+            
+            //Si té una paret també sumem 1/2 triangle
+            else ++half_triangle;
+        }
+        
+        else {
+            
+            //Si no té una pared a l'esquerra, si té una fitxa del seu equip 
+            //sumem 1/2 triangle
+            if (x > 0) {
+                if (s.getPos(x-1, y+1) == CellType.P2 | 
+                    s.getPos(x-1, y+1) == CellType.P2Q) ++half_triangle; 
+            }
+            
+            //Si té una paret també sumem 1/2 triangle
+            else ++half_triangle;
+            
+            //Si no té una pared a la dreta, si té una fitxa del seu equip 
+            //sumem 1/2 triangle
+            if (x < s.getSize()-1) {
+                if (s.getPos(x+1, y+1) == CellType.P2 | 
+                    s.getPos(x+1, y+1) == CellType.P2Q) ++half_triangle;
+            }
+            //Si té una paret també sumem 1/2 triangle
+            else ++half_triangle;
+        }
+        
+        return half_triangle;
     
     }
     
     
-    
-   
     public int trap (ElMeuStatus s, PlayerType player) {
         int h = 0;
         
@@ -181,7 +331,7 @@ public class Heuristica_IDS {
                     ++y2;
                 }
                 if (trap) {
-                    h += 141;
+                    h += 10;
                 }
             }
             
@@ -222,7 +372,7 @@ public class Heuristica_IDS {
                     ++y2;
                 }
                 if (trap) {
-                    h += 141;
+                    h += 10;
                 }
             }
         } 
@@ -263,7 +413,7 @@ public class Heuristica_IDS {
                     --y2;
                 }
                 if (trap) {
-                    h += 141;
+                    h += 10;
                 }
             }
             
@@ -304,7 +454,7 @@ public class Heuristica_IDS {
                     --y2;
                 }
                 if (trap) {
-                    h += 141;
+                    h += 10;
                 }
             }
         }
@@ -312,5 +462,3 @@ public class Heuristica_IDS {
         return h;
     }
 }    
-    
-
