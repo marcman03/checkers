@@ -13,34 +13,40 @@ import edu.upc.epsevg.prop.checkers.PlayerType;
  * @author marc
  */
 public class Heuristica_IDS {
-    
+    private int piece=100;
+    private int pieceQ=140;
     public Heuristica_IDS(){}
     
      public int getHeuristic(ElMeuStatus s,PlayerType team){
-        //System.out.println(""+s.toString());
+   
         
         int pieces_1 = count_pieces(s,team);
         int pieces_2 = count_pieces(s,PlayerType.opposite(team));
+
         
-        //int triangles_1 = count_triangles(s, team);
-        //int triangles_2 = count_triangles(s, PlayerType.opposite(team));
+        int trap_1=0;
+        int trap_2=0;
+     
+
+        if (s.getScore(team)-1> s.getScore(PlayerType.opposite(team))) {
+          
+            trap_1 = trap(s, team);
+
+           
+        }
+        else{
+           trap_2 = trap(s, PlayerType.opposite(team));
+        }
+       
         
-        //int trap_1 = trap(s, team);
-        //int trap_2 = trap(s, PlayerType.opposite(team));
+      
         
         int h = pieces_1 - pieces_2
-                //+ triangles_1 - triangles_2
-                //+ trap_1 - trap_2
+               
+                + trap_1 - trap_2
                 ;
-     
-        //System.out.println("Heuristica: " + h);
-        //System.out.println("Peces1: " + pieces_1);
-        //System.out.println("Peces2: " + pieces_2);
-        //System.out.println("Triangles1: " + triangles_1);
-        //System.out.println("Triangles2: " + triangles_2);
-        //System.out.println("Trap1: " + trap_1);
-        //System.out.println("Trap2: " + trap_2);
-        //System.out.println("==================================00");
+   
+
         return h;
     }
     
@@ -49,12 +55,12 @@ public class Heuristica_IDS {
         for (int y = 0; y < s.getSize(); ++y) {
             for (int x = 0; x < s.getSize(); ++x) { //TODO: recorrer bien madafaka + comprobaer si va bien
                 if (team == PlayerType.PLAYER1) {
-                    if (s.getPos(x, y) == CellType.P1) h += 100 + haltura(x,y,team);
-                    else if (s.getPos(x, y) == CellType.P1Q) h += 140; //TODO: las reinas no dan un buen valor
+                    if (s.getPos(x, y) == CellType.P1) h += piece + haltura(x,y,team);
+                    else if (s.getPos(x, y) == CellType.P1Q) h += pieceQ; //TODO: las reinas no dan un buen valor
                 }
                 else {
-                    if (s.getPos(x, y) == CellType.P2) h += 100 + haltura(x,y,team);
-                    else if (s.getPos(x, y) == CellType.P2Q) h += 140;
+                    if (s.getPos(x, y) == CellType.P2) h += piece + haltura(x,y,team);
+                    else if (s.getPos(x, y) == CellType.P2Q) h += pieceQ;
                 }
             }
         }
@@ -101,73 +107,31 @@ public class Heuristica_IDS {
     
     
     
-    public int count_triangles (ElMeuStatus s, PlayerType team) {
-        int h=0;
-        for (int y = 0; y < s.getSize(); ++y) {
-            for (int x = 0; x < s.getSize(); ++x) { //TODO: recorrer bien madafaka + comprobaer si va bien
-                if (team == PlayerType.PLAYER1) {
-                    if (y > 0) {
-                        if (s.getPos(x, y) == CellType.P1) {
-                            h += 4 * comprovate_triangle(s, CellType.P1, x, y);
-                        }
-                    }    
-                }
-                else {
-                    if (y < s.getSize()-1) {
-                        if (s.getPos(x, y) == CellType.P2) {
-                            h += 4 * comprovate_triangle(s, CellType.P2, x, y);
-                        }
-                    }    
-                }
-            }
-        }
-        return h;
-    }
-    
-    public int comprovate_triangle (ElMeuStatus s, CellType c, int x, int y) {
-        int r = 0;
-        
-        if (c == CellType.P1) {
-            if (x > 0) {
-                if (s.getPos(x-1, y-1) == c) ++r; //Afegir s.getPos(x-1, y-1) == c or CellType.P1Q si volem comptar reines
-            }
-            else ++r;
-            if (x < s.getSize()-1) {
-                if (s.getPos(x+1, y-1) == c) ++r;
-            }
-            else ++r;
-        }
-        else if (c == CellType.P2) {
-            if (x > 0) {
-                if (s.getPos(x-1, y+1) == c) ++r; //Afegir s.getPos(x-1, y-1) == c or CellType.P1Q si volem comptar reines
-            }
-            else ++r;
-            if (x < s.getSize()-1) {
-                if (s.getPos(x+1, y+1) == c) ++r;
-            }
-            else ++r;
-        }
-        
-        return r;
-    }
-    
+   
     public int trap (ElMeuStatus s, PlayerType player) {
         int h = 0;
         
-        CellType c = CellType.P1;
-        if (player == PlayerType.PLAYER2) c = CellType.P2; 
+        CellType c1 = CellType.P1;
+        CellType c2 = CellType.P1Q;
+        
+        if (player == PlayerType.PLAYER2) {
+            c1 = CellType.P2;
+            c2 = CellType.P2Q;
+        } 
         
         for (int y = 0; y < s.getSize(); ++y) {
             for (int x = 0; x < s.getSize(); ++x) {
                 
                     if (player == PlayerType.PLAYER1 ) {
                         if (y < 5) {
-                            if (s.getPos(x, y) == c) h += comprovate_trap(s, c, x, y);  
+                            if (s.getPos(x, y) == c1) h += comprovate_trap(s, c1, x, y);
+                            if (s.getPos(x, y) == c2) h += comprovate_trap(s, c2, x, y);
                         }    
                     }
                     else {
                         if (y > 2) {
-                            if (s.getPos(x, y) == c) h += comprovate_trap(s, c, x, y);
+                            if (s.getPos(x, y) == c1) h += comprovate_trap(s, c1, x, y);
+                            if (s.getPos(x, y) == c2) h += comprovate_trap(s, c2, x, y);
                         }    
                     }       
             }
@@ -181,17 +145,19 @@ public class Heuristica_IDS {
         boolean out = false;
         boolean trap = false;
         
-        if (c == CellType.P1) {
+        if (c == CellType.P1 | c == CellType.P1Q) {
             
             if (y > 0) {
                 if (x > 0) {
-                    if (s.getPos(x-1, y-1) != c) out = true;      // si la ficha de atras no es del mismo tipo sale               
+                    if (s.getPos(x-1, y-1) != CellType.P1 & s.getPos(x-1, y-1) != CellType.P1Q) out = true;      // si la ficha de atras no es del mismo tipo sale               
                 } 
             }
             
             if (y > 0) {
-                if (x+2 < s.getSize()-1) {
-                    if (s.getPos(x+3, y-1) != c) out = true;
+                if (x < s.getSize()-3) {
+                    if (s.getPos(x+2, y) == CellType.P1 | s.getPos(x+2, y) == CellType.P1Q) {
+                        if (s.getPos(x+3, y-1) != CellType.P1 & s.getPos(x+3, y-1) != CellType.P1Q) out = true;
+                    }
                 }
             }
             
@@ -204,10 +170,10 @@ public class Heuristica_IDS {
                         if (s.getPos(x2, y2) != CellType.EMPTY) out = true; // una ficha alante tiene que ser espacio para seguir
                     }
                     if (x2-x == 2) {
-                        if (s.getPos(x2, y2) != CellType.P1) out = true; // 2 fichas alante que ser del mismo equipo para seguir
+                        if (s.getPos(x2, y2) != CellType.P1 & s.getPos(x2, y2) != CellType.P1Q) out = true; // 2 fichas alante que ser del mismo equipo para seguir
                     }
                     if (x2-x == 3) {
-                        if (s.getPos(x2, y2) == CellType.P2) trap = true;//3 fichas alante tiene que ser enemiga para trampa
+                        if (s.getPos(x2, y2) == CellType.P2 | s.getPos(x2, y2) == CellType.P2Q) trap = true;//3 fichas alante tiene que ser enemiga para trampa
                         out = true;
                     }
                     
@@ -215,7 +181,7 @@ public class Heuristica_IDS {
                     ++y2;
                 }
                 if (trap) {
-                    h += 4;
+                    h += 141;
                 }
             }
             
@@ -224,13 +190,15 @@ public class Heuristica_IDS {
         
             if (y > 0) {
                 if (x < s.getSize()-1) {
-                    if (s.getPos(x+1, y-1) != c) out = true;                     
+                    if (s.getPos(x+1, y-1) != CellType.P1 & s.getPos(x+1, y-1) != CellType.P1Q) out = true;                     
                 }
             }
             
             if (y > 0) {
-                if (x-2 > 0) {
-                    if (s.getPos(x-3, y-1) != c) out = true;
+                if (x > 2) {
+                    if (s.getPos(x-2, y) == CellType.P1 | s.getPos(x-2, y) == CellType.P1Q) {
+                        if (s.getPos(x-3, y-1) != CellType.P1 & s.getPos(x-3, y-1) != CellType.P1Q) out = true;
+                    }
                 }
             }
            
@@ -254,7 +222,7 @@ public class Heuristica_IDS {
                     ++y2;
                 }
                 if (trap) {
-                    h += 4;
+                    h += 141;
                 }
             }
         } 
@@ -263,13 +231,15 @@ public class Heuristica_IDS {
             //P2 direccion arriba derecha es decir ++x --y
             if (y < s.getSize()-1) {
                 if (x > 0) {
-                    if (s.getPos(x-1, y+1) != c) out = true;      // si la ficha de atras no es del mismo tipo sale               
+                    if (s.getPos(x-1, y+1) != CellType.P2 & s.getPos(x-1, y+1) != CellType.P2Q) out = true;      // si la ficha de atras no es del mismo tipo sale               
                 } 
             }
             
             if (y < s.getSize()-1) {
-                if (x+2 < s.getSize()-1) {
-                    if (s.getPos(x+3, y+1) != c) out = true;
+                if (x < s.getSize()-3) {
+                    if (s.getPos(x+2, y) == CellType.P2 | s.getPos(x+2, y) == CellType.P2Q) {
+                        if (s.getPos(x+3, y+1) != CellType.P2 & s.getPos(x+2, y) != CellType.P2Q) out = true;
+                    }
                 }
             }
             
@@ -293,7 +263,7 @@ public class Heuristica_IDS {
                     --y2;
                 }
                 if (trap) {
-                    h += 4;
+                    h += 141;
                 }
             }
             
@@ -302,13 +272,15 @@ public class Heuristica_IDS {
             
             if (y < s.getSize()-1) {
                 if (x < s.getSize()-1) {
-                    if (s.getPos(x+1, y+1) != c) out = true;      // si la ficha de atras no es del mismo tipo sale               
+                    if (s.getPos(x+1, y+1) != CellType.P2 & s.getPos(x+1, y+1) != CellType.P2Q) out = true;      // si la ficha de atras no es del mismo tipo sale               
                 } 
             }
             
             if (y < s.getSize()-1 ) {
-                if (x-2 > 0) {
-                    if (s.getPos(x-3, y+1) != c) out = true;
+                if (x > 2) {
+                    if (s.getPos(x-2, y) == CellType.P2 | s.getPos(x-2, y) == CellType.P2Q) {
+                        if (s.getPos(x-3, y+1) != CellType.P2 & s.getPos(x-3, y+1) != CellType.P2Q) out = true;
+                    }
                 }
             }
             
@@ -332,7 +304,7 @@ public class Heuristica_IDS {
                     --y2;
                 }
                 if (trap) {
-                    h += 4;
+                    h += 141;
                 }
             }
         }
