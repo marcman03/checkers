@@ -22,7 +22,7 @@ public class Heuristica {
         
     }
 
-    public int getHeuristic(GameStatus s,PlayerType team){
+    public int getHeuristic(GameStatus s,PlayerType team, boolean trap){
         //System.out.println(""+s.toString());
         int pieces_1 = count_pieces(s,team);
         int pieces_2 = count_pieces(s,PlayerType.opposite(team));
@@ -30,11 +30,15 @@ public class Heuristica {
         int triangles_1 = count_triangles(s, team);
         int triangles_2 = count_triangles(s, PlayerType.opposite(team));
         
-        int trap_1 = trap(s, team);
-        int trap_2 = trap(s, PlayerType.opposite(team));
+        int trap_1 = 0;
+        int trap_2 = 0;
+        
+        if (trap) {
+            trap_1 = trap(s, team);
+            trap_2 = trap(s, PlayerType.opposite(team));
+        }    
         
 
-        
         int h = pieces_1 - pieces_2
                 + triangles_1 - triangles_2
                 + trap_1 - trap_2
@@ -170,20 +174,27 @@ public class Heuristica {
     public int trap (GameStatus s, PlayerType player) {
         int h = 0;
         
-        CellType c = CellType.P1;
-        if (player == PlayerType.PLAYER2) c = CellType.P2; 
+        CellType c1 = CellType.P1;
+        CellType c2 = CellType.P1Q;
+        
+        if (player == PlayerType.PLAYER2) {
+            c1 = CellType.P2;
+            c2 = CellType.P2Q;
+        } 
         
         for (int y = 0; y < s.getSize(); ++y) {
             for (int x = 0; x < s.getSize(); ++x) {
                 
                     if (player == PlayerType.PLAYER1 ) {
                         if (y < 5) {
-                            if (s.getPos(x, y) == c) h += comprovate_trap(s, c, x, y);  
+                            if (s.getPos(x, y) == c1) h += comprovate_trap(s, c1, x, y);
+                            if (s.getPos(x, y) == c2) h += comprovate_trap(s, c2, x, y);
                         }    
                     }
                     else {
                         if (y > 2) {
-                            if (s.getPos(x, y) == c) h += comprovate_trap(s, c, x, y);
+                            if (s.getPos(x, y) == c1) h += comprovate_trap(s, c1, x, y);
+                            if (s.getPos(x, y) == c2) h += comprovate_trap(s, c2, x, y);
                         }    
                     }       
             }
@@ -197,17 +208,17 @@ public class Heuristica {
         boolean out = false;
         boolean trap = false;
         
-        if (c == CellType.P1) {
+        if (c == CellType.P1 | c == CellType.P1Q) {
             
             if (y > 0) {
                 if (x > 0) {
-                    if (s.getPos(x-1, y-1) != c) out = true;      // si la ficha de atras no es del mismo tipo sale               
+                    if (s.getPos(x-1, y-1) != CellType.P1 & s.getPos(x-1, y-1) != CellType.P1Q) out = true;      // si la ficha de atras no es del mismo tipo sale               
                 } 
             }
             
             if (y > 0) {
                 if (x+2 < s.getSize()-1) {
-                    if (s.getPos(x+3, y-1) != c) out = true;
+                    if (s.getPos(x+3, y-1) != CellType.P1 & s.getPos(x+3, y-1) != CellType.P1Q) out = true;
                 }
             }
             
@@ -220,10 +231,10 @@ public class Heuristica {
                         if (s.getPos(x2, y2) != CellType.EMPTY) out = true; // una ficha alante tiene que ser espacio para seguir
                     }
                     if (x2-x == 2) {
-                        if (s.getPos(x2, y2) != CellType.P1) out = true; // 2 fichas alante que ser del mismo equipo para seguir
+                        if (s.getPos(x2, y2) != CellType.P1 & s.getPos(x2, y2) != CellType.P1Q) out = true; // 2 fichas alante que ser del mismo equipo para seguir
                     }
                     if (x2-x == 3) {
-                        if (s.getPos(x2, y2) == CellType.P2) trap = true;//3 fichas alante tiene que ser enemiga para trampa
+                        if (s.getPos(x2, y2) == CellType.P2 | s.getPos(x2, y2) == CellType.P2Q) trap = true;//3 fichas alante tiene que ser enemiga para trampa
                         out = true;
                     }
                     
@@ -240,13 +251,13 @@ public class Heuristica {
         
             if (y > 0) {
                 if (x < s.getSize()-1) {
-                    if (s.getPos(x+1, y-1) != c) out = true;                     
+                    if (s.getPos(x+1, y-1) != CellType.P1 & s.getPos(x+1, y-1) != CellType.P1Q) out = true;                     
                 }
             }
             
             if (y > 0) {
                 if (x-2 > 0) {
-                    if (s.getPos(x-3, y-1) != c) out = true;
+                    if (s.getPos(x-3, y-1) != CellType.P1 & s.getPos(x-3, y-1) != CellType.P1Q) out = true;
                 }
             }
            
@@ -279,13 +290,13 @@ public class Heuristica {
             //P2 direccion arriba derecha es decir ++x --y
             if (y < s.getSize()-1) {
                 if (x > 0) {
-                    if (s.getPos(x-1, y+1) != c) out = true;      // si la ficha de atras no es del mismo tipo sale               
+                    if (s.getPos(x-1, y+1) != CellType.P2 & s.getPos(x-1, y+1) != CellType.P2Q) out = true;      // si la ficha de atras no es del mismo tipo sale               
                 } 
             }
             
             if (y < s.getSize()-1) {
                 if (x+2 < s.getSize()-1) {
-                    if (s.getPos(x+3, y+1) != c) out = true;
+                    if (s.getPos(x+3, y+1) != CellType.P2 & s.getPos(x+3, y+1) != CellType.P2Q) out = true;
                 }
             }
             
@@ -318,13 +329,13 @@ public class Heuristica {
             
             if (y < s.getSize()-1) {
                 if (x < s.getSize()-1) {
-                    if (s.getPos(x+1, y+1) != c) out = true;      // si la ficha de atras no es del mismo tipo sale               
+                    if (s.getPos(x+1, y+1) != CellType.P2 & s.getPos(x+1, y+1) != CellType.P2Q) out = true;      // si la ficha de atras no es del mismo tipo sale               
                 } 
             }
             
             if (y < s.getSize()-1 ) {
                 if (x-2 > 0) {
-                    if (s.getPos(x-3, y+1) != c) out = true;
+                    if (s.getPos(x-3, y+1) != CellType.P2 & s.getPos(x-3, y+1) != CellType.P2Q) out = true;
                 }
             }
             
