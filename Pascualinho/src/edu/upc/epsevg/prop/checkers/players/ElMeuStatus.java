@@ -12,7 +12,7 @@ import java.util.Random;
 
 /**
  *
- * @author Usuari
+ * @author Marc Pascual Ivan Garcia
  */
 public class ElMeuStatus extends GameStatus {
     private static final long[][][] zobristTable = new long[GameStatus.N][GameStatus.N][4];
@@ -47,11 +47,8 @@ public class ElMeuStatus extends GameStatus {
     public void movePiece(List<Point> move) {
         updateHash(move);
         super.movePiece(move);
-        
-
-        // Actualiza el hash después de realizar el movimiento.
-     
     }
+    //actualitza el hash del tauler tras fer un moviment. 
     private void updateHash(List<Point>move){
         
         Point firstPoint=move.get(0);
@@ -79,7 +76,8 @@ public class ElMeuStatus extends GameStatus {
             }
         }
     }
-    //comprovar funcion
+    //retorna el punt on es capturat una ficha tenint una posicio inicial x y y una final nextX nextY
+    //Si no hi ha cap captura retorna null
     private Point detectCapture(int x, int y, int nextX, int nextY){
         if (Math.abs(nextX - x) == 2 && Math.abs(nextY - y) == 2) {
             int capturedX = (x +nextX) / 2;
@@ -87,11 +85,9 @@ public class ElMeuStatus extends GameStatus {
             return(new Point(capturedX,capturedY));
         }
         return null;
-    
-    
-    
-    
     }
+    //retorna segons la peça que es un index o un altre
+    
     private int getPieceIndex(CellType type) {
         if (type == CellType.P1) {
             return 0;
@@ -105,7 +101,7 @@ public class ElMeuStatus extends GameStatus {
         return -1; // Valor por defecto o error.
     }
     
-    
+    //retorna el hash de un tauler, 
     private long CalculateHash() {
         long h = 0;
         for (int y = 0; y < getSize(); ++y) {
@@ -122,14 +118,12 @@ public class ElMeuStatus extends GameStatus {
         return h;
     }
     
-    
+    //Retorna el hash del tauler,
+    //tenint en compte que si un tauler es igual que un altre pero de players diferents 
+    //el hash es difetent
     public long getHash(){
         if (this.getCurrentPlayer() == PlayerType.PLAYER1) return hash^ zobristTableDiferenciador;
         return hash;
     
     }
-    
-
-    
-    
 }
