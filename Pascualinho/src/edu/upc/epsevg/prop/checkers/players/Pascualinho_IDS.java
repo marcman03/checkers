@@ -125,8 +125,8 @@ public class Pascualinho_IDS implements IPlayer, IAuto {
             hashTable.put(s.getHash(),v);
         }
         
-        System.out.println("nodes: " + nodes);
-        System.out.println("depth: " + depth);
+        //System.out.println("nodes: " + nodes);
+        //System.out.println("depth: " + depth);
         stop=false;
 
         return new PlayerMove(moves.get(bestmove), 0L, 0, SearchType.MINIMAX);          
