@@ -11,7 +11,6 @@ import edu.upc.epsevg.prop.checkers.PlayerType;
 import edu.upc.epsevg.prop.checkers.SearchType;
 
 import edu.upc.epsevg.prop.checkers.players.Heuristica;
-import edu.upc.epsevg.prop.checkers.players.Heuristica2;
 
 import java.awt.Point;
 import java.util.ArrayList;
@@ -19,7 +18,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Jugador aleatori
+ * Pascualinho
  * @author Marc Pascual Ivan Garcia
  */
 public class Pascualinho implements IPlayer, IAuto {
@@ -31,9 +30,7 @@ public class Pascualinho implements IPlayer, IAuto {
     private int depth;
     private int nodes;
     
-    //Guardem en booleans la opció de fer una trampa al rival(heurística)
-    //i de canviar a la heurística del "lategame" (final partida)
-    private boolean lategame;
+    //Guardem en booleà la opció de fer una trampa al rival(heurística)
     private boolean trap;
     
     //Guardem un PlayerType per saber si som Player1 o Player2
@@ -47,11 +44,15 @@ public class Pascualinho implements IPlayer, IAuto {
         this.depth = depth;
         nodes = 0;
         
-        lategame = false;
         trap = false;
         
     }
-    
+    /**
+     * Retorna el nom del jugador
+     *
+     * 
+     * @return el nom del jugador.
+     */
     @Override
     public String getName() {
         
@@ -69,8 +70,7 @@ public class Pascualinho implements IPlayer, IAuto {
     }
 
     /**
-     * Decideix el moviment del jugador donat un tauler i un color de peça que
-     * ha de posar.
+     * Decideix el moviment del jugador donat un tauler 
      *
      * @param s Tauler i estat actual de joc.
      * @return el moviment que fa el jugador.
@@ -84,10 +84,6 @@ public class Pascualinho implements IPlayer, IAuto {
         //Obtenim el número de fitxes de cada jugador 
         int pieces1 = s.getScore(player);
         int pieces2 = s.getScore(PlayerType.opposite(player));
-        
-        //Si el total de les peces es 10 o menys passem a l'heurística del 
-        //"lategame"
-        if (pieces1 + pieces2 <= 10) lategame = true;
         
         //Si tenim més peces que el rival utilitzarem l'estratègia de posar-li 
         //trampes. Sinò, no l'utilitzarem.
@@ -132,6 +128,16 @@ public class Pascualinho implements IPlayer, IAuto {
         
     }
     
+    /**
+     * Retorna un valor heurístic per cada tauler del nivell donat incialment 
+     *
+     * @param s Tauler i estat actual de joc.
+     * @param depth Nivells que queden per baixar.
+     * @param alpha Valor per la poda.
+     * @param beta Valor per la poda.
+     * @param max Indica i el nivell és un max o un min.
+     * @return valor heurístic.
+     */
     public int minmax(GameStatus s, int depth, int alpha, int beta, 
                       boolean max) {
         
@@ -142,23 +148,9 @@ public class Pascualinho implements IPlayer, IAuto {
         //o el jugador que li toca tirar no te moviments possibles.
         if (depth == 0 | s.checkGameOver() | !s.currentPlayerCanMove()) {
             
+            Heuristica h = new Heuristica();
+            return h.getHeuristic(s, player, trap);
             
-            //TODOOOOOOO
-            
-            
-            
-           // if (!lategame) {
-                Heuristica h = new Heuristica();
-                int heur = h.getHeuristic(s, player, trap);
-                //System.out.println("H: " + heur);
-                return heur;
-            //}
-            /*else {
-                Heuristica2 h = new Heuristica2();
-                int heur = h.getHeuristic(s, player, trap);
-                System.out.println("H: " + heur);
-                return heur;
-            }*/
         }
         
         else {
@@ -195,8 +187,14 @@ public class Pascualinho implements IPlayer, IAuto {
         }
     }
     
-    //Retorna una llista de possibles moviments en forma de llista de llista de 
-    //punts donat un tauler s
+    /**
+     *Retorna una llista de possibles moviments en forma de llista de llista de  
+     *punts donat un tauler s
+     * 
+     * @param s Tauler i estat actual de joc.
+     * 
+     * @return Llista de llista de punts.
+     */
     public static List<List<Point>> get_list(GameStatus s) {
         
         //Obtenim els moviments possibles del tauler s
@@ -216,7 +214,13 @@ public class Pascualinho implements IPlayer, IAuto {
         
     }
     
-    //Omple una llista de llista de punts a partir d'un MoveNode  
+    /**
+     *Omple una llista de llista de punts a partir d'un MoveNode 
+     * 
+     * @param node MoveNode d'un arbre d'un moviment.
+     * @param list Llista de llista de punts a omplir.
+     * 
+     */
     public static void recorre_arbre(MoveNode node, List<List<Point>> list) {
         
         //Si node és una fulla recorrem l'arbre cap amunt per introduir a una 
